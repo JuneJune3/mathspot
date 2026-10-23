@@ -12,13 +12,20 @@ type Props = {
 };
 
 const GAMES: [string, string][] = [
-  ["Roblox", "roblox.com"], ["Now.gg", "now.gg"], ["Scratch", "scratch.mit.edu"], ["Poki", "poki.com"],
-  ["CrazyGames", "crazygames.com"], ["Retro Bowl", "poki.com/en/g/retro-bowl"], ["Bloons TD", "poki.com/en/g/bloons-tower-defense-5"],
-  ["Happy Wheels", "totaljerkface.com/happy_wheels.tjf"], ["Krunker", "krunker.io"], ["Shell Shockers", "shellshock.io"],
-  ["1v1.LOL", "1v1.lol"], ["Agar.io", "agar.io"], ["Slither.io", "slither.io"], ["Diep.io", "diep.io"],
-  ["Paper.io", "paper-io.com"], ["Minecraft", "minecraft.net"], ["Minecraft Classic", "classic.minecraft.net"],
-  ["Fortnite", "fortnite.com"], ["Steam", "store.steampowered.com"], ["Epic Games", "store.epicgames.com"],
-  ["Twitch", "twitch.tv"], ["Wordle", "nytimes.com/games/wordle"], ["2048", "play2048.co"], ["Chess", "chess.com"],
+  ["Eaglercraft", "eaglercraft.com"], ["Minecraft Classic", "classic.minecraft.net"], ["CloudMoon", "web.cloudmoonapp.com"], ["EasyFun", "easyfun.gg"],
+  ["GeForce NOW", "play.geforcenow.com"], ["Xbox Cloud", "xbox.com/play"], ["Now.gg", "now.gg"], ["Roblox", "roblox.com"],
+  ["Geometry Dash", "geometrydash.com"], ["Poki", "poki.com"], ["CrazyGames", "crazygames.com"], ["Coolmath Games", "coolmathgames.com"],
+  ["Retro Bowl", "poki.com/en/g/retro-bowl"], ["Subway Surfers", "poki.com/en/g/subway-surfers"], ["Moto X3M", "poki.com/en/g/moto-x3m"], ["Drive Mad", "poki.com/en/g/drive-mad"],
+  ["Bloons TD 5", "poki.com/en/g/bloons-tower-defense-5"], ["Slope", "slopegame.io"], ["Run 3", "coolmathgames.com/0-run-3"], ["Fireboy & Watergirl", "coolmathgames.com/0-fireboy-and-water-girl-in-the-forest-temple"],
+  ["Happy Wheels", "totaljerkface.com/happy_wheels.tjf"], ["Krunker", "krunker.io"], ["Shell Shockers", "shellshock.io"], ["1v1.LOL", "1v1.lol"],
+  ["Smash Karts", "smashkarts.io"], ["Bonk.io", "bonk.io"], ["Venge.io", "venge.io"], ["Ev.io", "ev.io"],
+  ["Agar.io", "agar.io"], ["Slither.io", "slither.io"], ["Diep.io", "diep.io"], ["Paper.io 2", "paper-io.com"],
+  ["Hole.io", "hole-io.com"], ["Surviv / Suroi", "suroi.io"], ["Zombs Royale", "zombsroyale.io"], ["Skribbl.io", "skribbl.io"],
+  ["Gartic Phone", "garticphone.com"], ["GeoGuessr", "geoguessr.com"], ["Chess", "chess.com"], ["Lichess", "lichess.org"],
+  ["Wordle", "nytimes.com/games/wordle"], ["2048", "play2048.co"], ["Tetris", "tetris.com/play-tetris"], ["Pac-Man", "freepacman.org"],
+  ["Cookie Clicker", "orteil.dashnet.org/cookieclicker"], ["Little Alchemy 2", "littlealchemy2.com"], ["Scratch", "scratch.mit.edu"], ["Armor Games", "armorgames.com"],
+  ["Kongregate", "kongregate.com"], ["Newgrounds", "newgrounds.com/games"], ["itch.io (web)", "itch.io/games/platform-web"], ["Friv", "friv.com"],
+  ["Miniclip", "miniclip.com"], ["Y8", "y8.com"], ["Lagged", "lagged.com"], ["Twitch", "twitch.tv"],
 ];
 
 const icon = (u: string) => `https://www.google.com/s2/favicons?sz=64&domain=${u.split("/")[0]}`;
