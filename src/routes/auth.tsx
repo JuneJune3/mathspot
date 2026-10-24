@@ -37,7 +37,7 @@ function AuthPage() {
     setErr(""); setMsg("");
     const f = new FormData(e.currentTarget);
     const parsed = z.object({ email, password, ...(mode === "up" ? { username } : {}) }).safeParse(Object.fromEntries(f));
-    if (!parsed.success) { setErr(parsed.error.issues[0].message); return; }
+    if (!parsed.success) { setErr(parsed.error.issues[0]?.message ?? "Invalid input"); return; }
     const d = parsed.data as { email: string; password: string; username?: string };
     setBusy(true);
     if (mode === "up") {

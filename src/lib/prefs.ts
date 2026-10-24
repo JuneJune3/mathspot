@@ -56,7 +56,7 @@ export function usePrefs(): Prefs {
 export function usePrefsEffects(p: Prefs) {
   useEffect(() => {
     const low = typeof navigator !== "undefined" && ((navigator as { deviceMemory?: number }).deviceMemory ?? 8) <= 2;
-    document.documentElement.dataset.motion = low && p.motion === "intense" ? "minimal" : p.motion;
+    document.documentElement.dataset["motion"] = low && p.motion === "intense" ? "minimal" : p.motion;
   }, [p.motion]);
   useEffect(() => {
     document.title = p.tabTitle || "WebPortal Hub";
