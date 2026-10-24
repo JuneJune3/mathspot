@@ -161,7 +161,7 @@ function Profile() {
   return (
     <div className="mx-auto max-w-md w-full py-14 px-6">
       <div className={`${card} rounded-[1.5rem] p-8 text-center mb-4`}>
-        <span className="grid place-items-center mx-auto h-16 w-16 rounded-[1rem] bg-site-import-primary text-site-import-foreground text-[22px] font-semibold mb-4 brand-gradient">{(username || "G")[0].toUpperCase()}</span>
+        <span className="grid place-items-center mx-auto h-16 w-16 rounded-[1rem] bg-site-import-primary text-site-import-foreground text-[22px] font-semibold mb-4 brand-gradient">{(username || "G").charAt(0).toUpperCase()}</span>
         <h2 className="font-heading text-site-import-foreground text-[20px] font-semibold m-0">{user ? "@" + (username || "you") : "Guest"}</h2>
         <p className="text-site-import-muted-foreground text-[13px] leading-relaxed mt-2 mb-6">{user ? user.email : "You're browsing as a guest. Sign in to open sites and sync your workspace."}</p>
         <SignInNote />
