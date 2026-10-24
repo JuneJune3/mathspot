@@ -24,22 +24,7 @@ type Props = {
   error: string;
 };
 
-const GAMES: [string, string][] = [
-  ["Eaglercraft", "eaglercraft.com"], ["Minecraft Classic", "classic.minecraft.net"], ["CloudMoon", "web.cloudmoonapp.com"], ["EasyFun", "easyfun.gg"],
-  ["GeForce NOW", "play.geforcenow.com"], ["Xbox Cloud", "xbox.com/play"], ["Now.gg", "now.gg"], ["Roblox", "roblox.com"],
-  ["Geometry Dash", "geometrydash.com"], ["Poki", "poki.com"], ["CrazyGames", "crazygames.com"], ["Coolmath Games", "coolmathgames.com"],
-  ["Retro Bowl", "poki.com/en/g/retro-bowl"], ["Subway Surfers", "poki.com/en/g/subway-surfers"], ["Moto X3M", "poki.com/en/g/moto-x3m"], ["Drive Mad", "poki.com/en/g/drive-mad"],
-  ["Bloons TD 5", "poki.com/en/g/bloons-tower-defense-5"], ["Slope", "slopegame.io"], ["Run 3", "coolmathgames.com/0-run-3"], ["Fireboy & Watergirl", "coolmathgames.com/0-fireboy-and-water-girl-in-the-forest-temple"],
-  ["Happy Wheels", "totaljerkface.com/happy_wheels.tjf"], ["Krunker", "krunker.io"], ["Shell Shockers", "shellshock.io"], ["1v1.LOL", "1v1.lol"],
-  ["Smash Karts", "smashkarts.io"], ["Bonk.io", "bonk.io"], ["Venge.io", "venge.io"], ["Ev.io", "ev.io"],
-  ["Agar.io", "agar.io"], ["Slither.io", "slither.io"], ["Diep.io", "diep.io"], ["Paper.io 2", "paper-io.com"],
-  ["Hole.io", "hole-io.com"], ["Surviv / Suroi", "suroi.io"], ["Zombs Royale", "zombsroyale.io"], ["Skribbl.io", "skribbl.io"],
-  ["Gartic Phone", "garticphone.com"], ["GeoGuessr", "geoguessr.com"], ["Chess", "chess.com"], ["Lichess", "lichess.org"],
-  ["Wordle", "nytimes.com/games/wordle"], ["2048", "play2048.co"], ["Tetris", "tetris.com/play-tetris"], ["Pac-Man", "freepacman.org"],
-  ["Cookie Clicker", "orteil.dashnet.org/cookieclicker"], ["Little Alchemy 2", "littlealchemy2.com"], ["Scratch", "scratch.mit.edu"], ["Armor Games", "armorgames.com"],
-  ["Kongregate", "kongregate.com"], ["Newgrounds", "newgrounds.com/games"], ["itch.io (web)", "itch.io/games/platform-web"], ["Friv", "friv.com"],
-  ["Miniclip", "miniclip.com"], ["Y8", "y8.com"], ["Lagged", "lagged.com"], ["Twitch", "twitch.tv"],
-];
+import { GAMES, CATEGORIES } from "@/lib/games";
 
 const icon = (u: string) => `https://www.google.com/s2/favicons?sz=64&domain=${u.split("/")[0]}`;
 
@@ -61,21 +46,30 @@ function SignInNote() {
 }
 
 function Gaming({ go }: Props) {
+  const [cat, setCat] = useState("All");
+  const list = cat === "All" ? GAMES : GAMES.filter((g) => g.category === cat);
   return (
-    <div className="mx-auto max-w-4xl w-full py-14 px-6">
-      <div className="text-center mb-10">
+    <div className="mx-auto max-w-5xl w-full py-14 px-6">
+      <div className="text-center mb-8">
         <span className={pill}>Gaming</span>
         <h1 className="font-heading text-site-import-foreground font-semibold text-[36px] md:text-[48px] tracking-[-0.03em] leading-tight m-0">Ready to play?</h1>
-        <p className="text-site-import-muted-foreground text-[0.875rem] leading-relaxed mt-3 mx-auto max-w-md">{GAMES.length} no-download games and game sites — pick one and it opens in your browser window.</p>
+        <p className="text-site-import-muted-foreground text-[0.875rem] leading-relaxed mt-3 mx-auto max-w-md">{GAMES.length} no-download games — pick one and it opens in your browser window. GeForce NOW needs a free NVIDIA account and may have a queue; paid tiers skip it.</p>
       </div>
-      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2.5">
-        {GAMES.map(([name, url]) => (
-          <button key={name} onClick={() => go(url)} className={`${card} anim-card group flex flex-col items-center gap-2.5 py-4 px-2 cursor-pointer`}>
+      <div className="flex flex-wrap justify-center gap-2 mb-8">
+        {CATEGORIES.map((c) => (
+          <button key={c} onClick={() => setCat(c)} aria-pressed={cat === c} className={`rounded-full px-3.5 py-1.5 text-[12px] cursor-pointer border ${cat === c ? "bg-site-import-primary text-site-import-foreground border-site-import-primary" : "bg-site-import-border text-site-import-muted-foreground border-site-import-card"}`}>{c}</button>
+        ))}
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5">
+        {list.map((g) => (
+          <div key={g.name} className={`${card} anim-card flex flex-col items-center gap-2 py-4 px-2`}>
             <span className="grid place-items-center h-12 w-12 rounded-[14px] bg-site-import-foreground">
-              <img src={icon(url)} alt="" className="h-8 w-8" loading="lazy" />
+              <img src={icon(g.url)} alt="" className="h-8 w-8 object-contain" loading="lazy" />
             </span>
-            <span className="text-site-import-muted-foreground text-[12px] whitespace-nowrap overflow-hidden text-ellipsis w-full text-center">{name}</span>
-          </button>
+            <span className="text-site-import-foreground text-[12px] font-medium w-full text-center line-clamp-2 min-h-[2.4em]">{g.name}</span>
+            <span className="text-site-import-muted-foreground text-[10px] tracking-[0.1em] uppercase">{g.category}</span>
+            <button onClick={() => go(g.url)} className={primaryBtn + " !py-1.5 !px-4 !text-[12px]"}>Play</button>
+          </div>
         ))}
       </div>
     </div>
