@@ -1,4 +1,7 @@
-import { useState, type ChangeEvent } from "react";
+import { useEffect, useRef, useState, type ChangeEvent } from "react";
+import { LoaderCircle, Maximize, Minimize, ThumbsDown, ThumbsUp } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useGameRatings } from "@/lib/game-ratings";
 import { Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -47,6 +50,7 @@ function SignInNote() {
 
 function Gaming({ go }: Props) {
   const [cat, setCat] = useState("All");
+  const { ratings, rate } = useGameRatings();
   const list = cat === "All" ? GAMES : GAMES.filter((g) => g.category === cat);
   return (
     <div className="mx-auto max-w-5xl w-full py-14 px-6">
@@ -68,7 +72,11 @@ function Gaming({ go }: Props) {
             </span>
             <span className="text-site-import-foreground text-[12px] font-medium w-full text-center line-clamp-2 min-h-[2.4em]">{g.name}</span>
             <span className="text-site-import-muted-foreground text-[10px] tracking-[0.1em] uppercase">{g.category}</span>
-            <button onClick={() => go(g.url)} className={primaryBtn + " !py-1.5 !px-4 !text-[12px]"}>Play</button>
+            <Button onClick={() => go(g.url)} size="sm">Play</Button>
+            <div className="flex gap-1">
+              <Button variant="ghost" size="icon" title={`Like ${g.name}`} aria-label={`Like ${g.name}`} aria-pressed={ratings[g.url] === "like"} onClick={() => rate(g.url, "like")} className={ratings[g.url] === "like" ? "text-site-import-primary bg-site-import-card" : "text-site-import-muted-foreground"}><ThumbsUp /></Button>
+              <Button variant="ghost" size="icon" title={`Dislike ${g.name}`} aria-label={`Dislike ${g.name}`} aria-pressed={ratings[g.url] === "dislike"} onClick={() => rate(g.url, "dislike")} className={ratings[g.url] === "dislike" ? "text-site-import-primary bg-site-import-card" : "text-site-import-muted-foreground"}><ThumbsDown /></Button>
+            </div>
           </div>
         ))}
       </div>
@@ -173,6 +181,22 @@ function Profile() {
 }
 
 function Browse({ live, loading, error, setView }: Props) {
+  const frame = useRef<HTMLDivElement>(null);
+  const [fullscreen, setFullscreen] = useState(false);
+  const [fullscreenError, setFullscreenError] = useState("");
+  const [loadedUrl, setLoadedUrl] = useState("");
+  useEffect(() => {
+    const update = () => setFullscreen(document.fullscreenElement === frame.current);
+    document.addEventListener("fullscreenchange", update);
+    return () => { document.removeEventListener("fullscreenchange", update); };
+  }, []);
+  const toggleFullscreen = async () => {
+    setFullscreenError("");
+    try {
+      if (document.fullscreenElement) await document.exitFullscreen();
+      else if (frame.current) await frame.current.requestFullscreen();
+    } catch { setFullscreenError("Fullscreen isn't available in this window."); }
+  };
   if (error)
     return (
       <div className="grid place-items-center min-h-full px-6 text-center">
@@ -185,12 +209,19 @@ function Browse({ live, loading, error, setView }: Props) {
     );
   if (!live || loading && !live)
     return (
-      <div className="grid place-items-center min-h-full text-site-import-muted-foreground text-[14px]">Starting your private browser…</div>
+      <div role="status" className="grid place-content-center justify-items-center gap-3 min-h-full text-site-import-muted-foreground text-[14px]"><LoaderCircle className="browser-loading h-7 w-7 text-site-import-primary" />Starting your private browser…</div>
     );
   return (
-    <div className="relative h-full w-full">
-      <iframe title="Browser" src={live.liveUrl} className="absolute inset-0 h-full w-full border-0" allow="clipboard-read; clipboard-write; autoplay; fullscreen" />
-      {loading && <div className="absolute top-3 left-1/2 -translate-x-1/2 bg-site-import-border text-site-import-foreground text-[12px] rounded-full px-3 py-1">Loading…</div>}
+    <div ref={frame} className="relative flex h-full min-h-0 w-full flex-col border-4 border-browser-frame bg-browser-frame">
+      <div className="flex shrink-0 items-center gap-3 bg-site-import-background px-3 py-1 text-site-import-foreground">
+        <span className="min-w-0 flex-1 truncate text-xs">{live.url}</span>
+        {fullscreenError && <span role="alert" className="text-xs">{fullscreenError}</span>}
+        <Button variant="ghost" size="icon" onClick={toggleFullscreen} aria-label={fullscreen ? "Exit fullscreen" : "Enter fullscreen"} title={fullscreen ? "Exit fullscreen" : "Enter fullscreen"}>{fullscreen ? <Minimize /> : <Maximize />}</Button>
+      </div>
+      <div className="relative min-h-0 flex-1">
+        <iframe title="Browser" src={live.liveUrl} onLoad={() => setLoadedUrl(live.liveUrl)} className="absolute inset-0 h-full w-full border-0" allow="clipboard-read; clipboard-write; autoplay; fullscreen; gamepad; encrypted-media" allowFullScreen />
+        {(loading || loadedUrl !== live.liveUrl) && <div role="status" className="pointer-events-none absolute top-3 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-site-import-background text-site-import-foreground text-xs rounded-md px-3 py-2"><LoaderCircle className="browser-loading h-4 w-4" />Loading…</div>}
+      </div>
     </div>
   );
 }

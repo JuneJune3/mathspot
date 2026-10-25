@@ -10,3 +10,5 @@
 <!-- LOVABLE:END -->
 
 - Web browsing goes through Hyperbrowser cloud sessions via server functions in src/lib/hyperbrowser.functions.ts (key HYPERBROWSER_API_KEY stays server-side); the live view is embedded in an iframe.
+- Personal game ratings are stored on the current device, not represented as community vote counts.
+- Cross-origin iframe focus is treated as activity while this tab is visible; parent pages cannot inspect in-game keyboard and mouse events.
