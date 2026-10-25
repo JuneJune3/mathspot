@@ -73,10 +73,19 @@ export function useIdle(minutes: number, enabled: boolean, onIdle: () => void) {
   useEffect(() => {
     if (!enabled) return;
     let t: ReturnType<typeof setTimeout>;
-    const reset = () => { clearTimeout(t); t = setTimeout(onIdle, clampIdle(minutes) * 60_000); };
+    const iframeActive = () => document.visibilityState === "visible" && document.activeElement?.tagName === "IFRAME";
+    const reset = () => {
+      clearTimeout(t);
+      t = setTimeout(() => {
+        if (!iframeActive()) onIdle();
+        reset();
+      }, clampIdle(minutes) * 60_000);
+    };
     const evs = ["pointerdown", "keydown", "wheel", "touchstart", "mousemove"] as const;
     evs.forEach((e) => window.addEventListener(e, reset, { passive: true }));
+    // A cross-origin live view does not expose its input events to this page.
+    const poll = setInterval(() => { if (iframeActive()) reset(); }, 1000);
     reset();
-    return () => { clearTimeout(t); evs.forEach((e) => window.removeEventListener(e, reset)); };
+    return () => { clearTimeout(t); clearInterval(poll); evs.forEach((e) => window.removeEventListener(e, reset)); };
   }, [minutes, enabled, onIdle]);
 }

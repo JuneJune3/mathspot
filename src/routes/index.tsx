@@ -1,6 +1,7 @@
-import { useState, type CSSProperties, type FormEvent } from "react";
+import { useCallback, useRef, useState, type CSSProperties, type FormEvent } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { openSite } from "@/lib/hyperbrowser.functions";
+import { closeSite, openSite } from "@/lib/hyperbrowser.functions";
+import { useIdle, usePrefs, usePrefsEffects } from "@/lib/prefs";
 import { ExtraView, type View } from "@/routes/-views";
 import { createFileRoute } from "@tanstack/react-router";
 import capturedCSS from "../styles/site.css?inline";
@@ -17,8 +18,27 @@ function Index() {
   const [error, setError] = useState("");
   const [address, setAddress] = useState("");
   const open = useServerFn(openSite);
+  const close = useServerFn(closeSite);
+  const prefs = usePrefs();
+  usePrefsEffects(prefs);
+  const [notice, setNotice] = useState("");
+  const closing = useRef(false);
+  const stopIdle = useCallback(async () => {
+    if (!live || closing.current || loading) return;
+    closing.current = true;
+    try {
+      await close({ data: { sessionId: live.sessionId } });
+      setLive(null);
+      setView("home");
+      setNotice("Browser closed after inactivity.");
+    } catch {
+      setNotice("Could not close the browser. It will retry after the next idle period.");
+    } finally { closing.current = false; }
+  }, [close, live, loading]);
+  useIdle(prefs.idleMinutes, Boolean(live) && !loading, stopIdle);
   const go = async (query: string) => {
-    if (!query.trim()) return;
+    if (!query.trim() || closing.current || loading) return;
+    setNotice("");
     setView("browse"); setLoading(true); setError(""); setAddress(query);
     try {
       const r = await open({ data: { query, sessionId: live?.sessionId } });
@@ -137,6 +157,7 @@ function Index() {
                 </button>
               </div>
               <div className="soft-scroll aurora bg-site-import-background flex-1 overflow-y-auto relative">
+                {notice && <p role="status" className="text-site-import-muted-foreground text-sm px-6 py-2">{notice}</p>}
                 {view !== "home" ? <ExtraView view={view} setView={setView} go={go} live={live} loading={loading} error={error} /> : (
 <div className="ml-auto mr-auto max-w-3xl w-full py-14 px-6 md:py-20 md:px-6">
                   <div className="mb-10 text-center">
