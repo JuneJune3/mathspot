@@ -46,6 +46,7 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
   --color-ring-offset-background: var(--background);
+  --color-browser-frame: var(--browser-frame);
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
@@ -63,6 +64,7 @@
 
 :root {
   --radius: 0.625rem;
+  --browser-frame: oklch(0 0 0);
   --background: oklch(1 0 0);
   --foreground: oklch(0.129 0.042 264.695);
   --card: oklch(1 0 0);
@@ -180,3 +182,12 @@
   --color-site-import-card: var(--site-import-card);
 }
 /* site-import tokens: end */
+
+@keyframes browser-loading {
+  to { transform: rotate(360deg); }
+}
+.browser-loading { animation: browser-loading 1s linear infinite; }
+html[data-motion="none"] .browser-loading { animation: none; }
+@media (prefers-reduced-motion: reduce) {
+  .browser-loading { animation: none; }
+}
