@@ -1,9 +1,16 @@
 import { useEffect, useState } from "react";
 
 export type Motion = "none" | "minimal" | "intense";
-export type Prefs = { motion: Motion; idleMinutes: number; tabTitle: string; tabIcon: string };
+export type Provider = "hyperbrowser" | "steel" | "kernel";
+export type Prefs = { motion: Motion; idleMinutes: number; tabTitle: string; tabIcon: string; provider: Provider };
 
-export const DEFAULT_PREFS: Prefs = { motion: "minimal", idleMinutes: 10, tabTitle: "", tabIcon: "" };
+export const PROVIDERS: { id: Provider; name: string }[] = [
+  { id: "hyperbrowser", name: "Hyperbrowser" },
+  { id: "steel", name: "Steel" },
+  { id: "kernel", name: "Kernel" },
+];
+
+export const DEFAULT_PREFS: Prefs = { motion: "minimal", idleMinutes: 10, tabTitle: "", tabIcon: "", provider: "hyperbrowser" };
 export const MAX_IDLE_MINUTES = 15;
 export const MAX_ICON_BYTES = 200_000;
 const KEY = "wph-prefs";
