@@ -1,11 +1,13 @@
-import { useEffect, useRef, useState, type ChangeEvent } from "react";
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { LoaderCircle, Maximize, Minimize, ThumbsDown, ThumbsUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useGameRatings } from "@/lib/game-ratings";
 import { Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { usePrefs, setPrefs, MAX_ICON_BYTES, MAX_IDLE_MINUTES, type Motion } from "@/lib/prefs";
+import { usePrefs, setPrefs, PROVIDERS, MAX_ICON_BYTES, MAX_IDLE_MINUTES, type Motion } from "@/lib/prefs";
+import { providerStatus, providerKeyState, saveProviderKey, clearProviderKey } from "@/lib/hyperbrowser.functions";
 import l1 from "@/assets/logo1.asset.json";
 import l2 from "@/assets/logo2.asset.json";
 import l3 from "@/assets/logo3.asset.json";
@@ -18,11 +20,13 @@ const LOGOS = [l7, l1, l2, l3, l4, l5, l6].map((l) => l.url);
 
 export type View = "home" | "gaming" | "chat" | "settings" | "profile" | "browse";
 
+export type Live = { sessionId: string; liveUrl: string; url: string; provider: string };
+
 type Props = {
   view: View;
   setView: (v: View) => void;
   go: (q: string) => void;
-  live: { liveUrl: string; url: string } | null;
+  live: Live | null;
   loading: boolean;
   error: string;
 };
@@ -35,6 +39,7 @@ const card = "bg-site-import-border border border-site-import-border rounded-[1r
 const label = "font-heading text-site-import-muted-foreground text-[13px] font-medium tracking-[0.16em] uppercase mb-3";
 const primaryBtn = "bg-site-import-primary text-site-import-foreground rounded-[.75rem] font-semibold text-[14px] px-5 py-2.5 cursor-pointer hover:opacity-90 transition-opacity";
 const pill = "font-mono inline-flex items-center gap-2 bg-site-import-border border border-site-import-card rounded-full text-site-import-muted-foreground text-[10px] tracking-[0.22em] uppercase px-3 py-1 mb-5";
+const inputCls = "w-full bg-site-import-background border border-site-import-card rounded-[.75rem] px-4 py-2.5 text-site-import-foreground text-[14px] outline-none focus:border-site-import-primary min-w-0";
 
 function SignInNote() {
   const { user, username } = useAuth();
@@ -84,26 +89,158 @@ function Gaming({ go }: Props) {
   );
 }
 
+// ============= Chat rooms =============
+
+type ChatRoom = { id: string; name: string; created_by: string | null };
+type ChatMsg = { id: string; room_id: string; user_id: string; username: string; content: string; created_at: string };
+
 function Chat() {
+  const { user, username, ready } = useAuth();
+  if (!ready)
+    return (
+      <div className="grid place-items-center min-h-full px-6 py-14">
+        <LoaderCircle className="browser-loading h-7 w-7 text-site-import-primary" />
+      </div>
+    );
+  if (!user)
+    return (
+      <div className="grid place-items-center min-h-full px-6 py-14">
+        <div className={`${card} rounded-[1.5rem] p-10 max-w-sm w-full text-center`}>
+          <span className="grid place-items-center mx-auto h-12 w-12 rounded-[14px] bg-site-import-card text-site-import-primary mb-4">
+            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" /></svg>
+          </span>
+          <h2 className="font-heading text-site-import-foreground text-[20px] font-semibold m-0">Sign in to chat</h2>
+          <p className="text-site-import-muted-foreground text-[13px] leading-relaxed mt-2 mb-6">Chat rooms are for signed-in members. Sign in to join public rooms or create private ones.</p>
+          <SignInNote />
+        </div>
+      </div>
+    );
+  return <ChatApp userId={user.id} username={username} />;
+}
+
+function ChatApp({ userId, username }: { userId: string; username: string }) {
+  const [rooms, setRooms] = useState<ChatRoom[]>([]);
+  const [active, setActive] = useState("");
+  const [messages, setMessages] = useState<ChatMsg[]>([]);
+  const [draft, setDraft] = useState("");
+  const [newRoom, setNewRoom] = useState("");
+  const [err, setErr] = useState("");
+  const listRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    supabase.from("chat_rooms").select("id,name,created_by").order("created_at").then(({ data }) => {
+      if (cancelled) return;
+      setRooms((data as ChatRoom[]) ?? []);
+      if (data?.length) setActive((a) => a || data[0].id);
+    });
+    return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => {
+    if (!active) return;
+    let cancelled = false;
+    const load = async () => {
+      const { data } = await supabase.from("chat_messages").select("id,room_id,user_id,username,content,created_at").eq("room_id", active).order("created_at");
+      if (!cancelled) setMessages((data as ChatMsg[]) ?? []);
+    };
+    void load();
+    const poll = setInterval(load, 4000);
+    return () => { cancelled = true; clearInterval(poll); };
+  }, [active]);
+
+  useEffect(() => {
+    listRef.current?.scrollTo({ top: listRef.current.scrollHeight });
+  }, [messages]);
+
+  const activeName = rooms.find((r) => r.id === active)?.name ?? "";
+
+  const send = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const content = draft.trim().slice(0, 1000);
+    if (!content || !active) return;
+    setDraft(""); setErr("");
+    const { error } = await supabase.from("chat_messages").insert({ room_id: active, user_id: userId, username: username || "user", content });
+    if (error) setErr(error.message);
+  };
+
+  const create = async () => {
+    const name = newRoom.trim().slice(0, 40);
+    if (!name) return;
+    setErr("");
+    const { data, error } = await supabase.from("chat_rooms").insert({ name, created_by: userId }).select("id,name").single();
+    if (error || !data) { setErr(error?.message ?? "Could not create the room."); return; }
+    setNewRoom("");
+    setRooms((r) => [...r, data as ChatRoom]);
+    setActive(data.id);
+  };
+
   return (
-    <div className="grid place-items-center min-h-full px-6 py-14">
-      <div className={`${card} rounded-[1.5rem] p-10 max-w-sm w-full text-center`}>
-        <span className="grid place-items-center mx-auto h-12 w-12 rounded-[14px] bg-site-import-card text-site-import-primary mb-4">
-          <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" /></svg>
-        </span>
-        <h2 className="font-heading text-site-import-foreground text-[20px] font-semibold m-0">Sign in to chat</h2>
-        <p className="text-site-import-muted-foreground text-[13px] leading-relaxed mt-2 mb-6">Chat rooms are for signed-in members. Sign in to join public rooms or create private ones.</p>
-        <SignInNote />
+    <div className="mx-auto max-w-3xl w-full py-10 px-6 anim-rise">
+      <div className="text-center mb-6">
+        <span className={pill}>Chat</span>
+        <h1 className="font-heading text-site-import-foreground font-semibold text-[30px] tracking-[-0.02em] leading-tight m-0">Chat rooms</h1>
+      </div>
+      <div className="flex flex-wrap items-center gap-2 mb-5">
+        {rooms.map((r) => (
+          <button key={r.id} onClick={() => setActive(r.id)} aria-pressed={active === r.id} className={`rounded-full px-3.5 py-1.5 text-[12px] cursor-pointer border ${active === r.id ? "bg-site-import-primary text-site-import-foreground border-site-import-primary" : "bg-site-import-border text-site-import-muted-foreground border-site-import-card"}`}>#{r.name}</button>
+        ))}
+        <form onSubmit={(e) => { e.preventDefault(); void create(); }} className="flex gap-2 ml-1">
+          <input value={newRoom} onChange={(e) => setNewRoom(e.target.value)} placeholder="New room name" maxLength={40} aria-label="New room name" className={inputCls + " !w-40 !py-1.5 text-[12px]"} />
+          <button type="submit" className={primaryBtn + " !py-1.5 text-[12px]"}>Create</button>
+        </form>
+      </div>
+      <div className={`${card} p-4 flex flex-col gap-3`}>
+        <div ref={listRef} className="flex-1 min-h-[300px] max-h-[46vh] overflow-y-auto flex flex-col gap-2.5 pr-1">
+          {messages.length === 0 ? (
+            <p className="m-auto text-site-import-muted-foreground text-[13px]">No messages yet in #{activeName || "this room"} — say hello!</p>
+          ) : (
+            messages.map((m) => {
+              const own = m.user_id === userId;
+              return (
+                <div key={m.id} className={`max-w-[80%] rounded-[.9rem] px-3.5 py-2 ${own ? "brand-gradient text-site-import-foreground self-end" : "bg-site-import-background text-site-import-foreground self-start border border-site-import-card"}`}>
+                  <div className="text-[10px] tracking-[0.08em] uppercase opacity-70 mb-0.5">{own ? "You" : m.username}</div>
+                  <p className="m-0 text-[13px] break-words whitespace-pre-wrap">{m.content}</p>
+                </div>
+              );
+            })
+          )}
+        </div>
+        {err && <p role="alert" className="text-destructive text-[12px] m-0">{err}</p>}
+        <form onSubmit={send} className="flex gap-2">
+          <input value={draft} onChange={(e) => setDraft(e.target.value)} placeholder={`Message #${activeName || "…"}`} maxLength={1000} aria-label="Message" className={inputCls} />
+          <button type="submit" className={primaryBtn} disabled={!draft.trim()}>Send</button>
+        </form>
       </div>
     </div>
   );
 }
 
+// ============= Settings =============
+
 const MOTIONS: [Motion, string][] = [["none", "None"], ["minimal", "Minimal"], ["intense", "Intense"]];
 
 function Settings() {
   const p = usePrefs();
+  const { user, username } = useAuth();
   const [iconErr, setIconErr] = useState("");
+  const statusFn = useServerFn(providerStatus);
+  const keyStateFn = useServerFn(providerKeyState);
+  const saveFn = useServerFn(saveProviderKey);
+  const clearFn = useServerFn(clearProviderKey);
+  const [avail, setAvail] = useState<Record<string, boolean> | null>(null);
+  const [own, setOwn] = useState<Record<string, boolean>>({});
+  const [draft, setDraft] = useState<Record<string, string>>({});
+  const [show, setShow] = useState<Record<string, boolean>>({});
+  const [keyMsg, setKeyMsg] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+    statusFn().then((s) => { if (!cancelled) setAvail(s.available); }).catch(() => { if (!cancelled) setAvail({ hyperbrowser: false, steel: false, kernel: false }); });
+    if (user) keyStateFn().then((s) => { if (!cancelled) { setOwn(s.own); setAvail(s.available); } }).catch(() => {});
+    return () => { cancelled = true; };
+  }, [user, statusFn, keyStateFn]);
+
   const upload = (e: ChangeEvent<HTMLInputElement>) => {
     setIconErr("");
     const f = e.target.files?.[0];
@@ -115,18 +252,93 @@ function Settings() {
     r.readAsDataURL(f);
   };
   const opt = (on: boolean) => `rounded-[.75rem] border-2 cursor-pointer anim-press ${on ? "border-site-import-primary" : "border-site-import-card"}`;
+
+  const saveKey = async (id: string, name: string) => {
+    const value = (draft[id] ?? "").trim();
+    if (!user || value.length < 8) return;
+    setKeyMsg("");
+    try {
+      await saveFn({ data: { provider: id as "hyperbrowser" | "steel" | "kernel", apiKey: value } });
+      setOwn((o) => ({ ...o, [id]: true }));
+      setDraft((d) => ({ ...d, [id]: "" }));
+      setKeyMsg(`${name} key saved. New sessions will use it.`);
+    } catch {
+      setKeyMsg(`Could not save the ${name} key. Please try again.`);
+    }
+  };
+
+  const removeKey = async (id: string, name: string) => {
+    if (!user) return;
+    setKeyMsg("");
+    try {
+      await clearFn({ data: { provider: id as "hyperbrowser" | "steel" | "kernel" } });
+      setOwn((o) => ({ ...o, [id]: false }));
+      setKeyMsg(`${name} key removed. The project key is used again.`);
+    } catch {
+      setKeyMsg(`Could not remove the ${name} key.`);
+    }
+  };
+
   return (
     <div className="mx-auto max-w-2xl w-full py-14 px-6 anim-rise">
       <h1 className="font-heading text-site-import-foreground text-[30px] font-semibold mb-8">Settings</h1>
       <h2 className={label}>Account</h2>
       <div className={`${card} p-5 flex items-center gap-4 mb-8`}>
-        <p className="text-site-import-muted-foreground text-[13px] flex-1 m-0">Sign in with email, Google or Apple.</p>
+        <p className="text-site-import-muted-foreground text-[13px] flex-1 m-0">{user ? `Signed in as @${username || "you"}.` : "Sign in with email, Google or Apple."}</p>
         <SignInNote />
+      </div>
+      <h2 className={label}>Browsing service</h2>
+      <div className={`${card} p-5 mb-8`}>
+        <p className="text-site-import-muted-foreground text-[13px] m-0 mb-4">Pick which service opens sites and games. A service is gray until an API key is set up, and if one fails the next one with a key takes over automatically.</p>
+        <div className="grid grid-cols-3 gap-2 mb-5">
+          {PROVIDERS.map((prov) => {
+            const ok = Boolean(avail?.[prov.id]);
+            const selected = p.provider === prov.id;
+            return (
+              <button
+                key={prov.id}
+                disabled={!ok}
+                onClick={() => setPrefs({ provider: prov.id })}
+                aria-pressed={selected}
+                title={ok ? `Use ${prov.name}` : `${prov.name} has no API key yet`}
+                className={`rounded-[.75rem] py-2.5 text-[13px] anim-press border border-site-import-card ${!ok ? "opacity-40 cursor-not-allowed text-site-import-muted-foreground bg-site-import-border" : selected ? "brand-gradient text-site-import-foreground cursor-pointer" : "text-site-import-muted-foreground hover:text-site-import-foreground bg-site-import-border cursor-pointer"}`}
+              >
+                {prov.name}
+                <div className="text-[10px] tracking-[0.08em] uppercase opacity-70">{ok ? (own[prov.id] ? "Your key" : "Ready") : "No key"}</div>
+              </button>
+            );
+          })}
+        </div>
+        {PROVIDERS.map((prov) => (
+          <div key={prov.id} className="mb-4 last:mb-0">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-site-import-foreground text-[13px] font-medium">{prov.name} API key</span>
+              <span className="text-site-import-muted-foreground text-[11px]">{own[prov.id] ? "Your key is saved" : avail?.[prov.id] ? "Using the project key" : "Not set up yet"}</span>
+            </div>
+            <div className="flex gap-2">
+              <input
+                type={show[prov.id] ? "text" : "password"}
+                value={draft[prov.id] ?? ""}
+                onChange={(e) => setDraft((d) => ({ ...d, [prov.id]: e.target.value }))}
+                placeholder={own[prov.id] ? "Key saved — paste a new one to replace it" : `Paste your ${prov.name} key`}
+                aria-label={`${prov.name} API key`}
+                className={inputCls}
+                disabled={!user}
+                autoComplete="off"
+              />
+              <button type="button" onClick={() => setShow((s) => ({ ...s, [prov.id]: !s[prov.id] }))} className="border border-site-import-card rounded-[.75rem] px-3 text-[12px] text-site-import-muted-foreground cursor-pointer hover:text-site-import-foreground" aria-label={show[prov.id] ? `Hide ${prov.name} key` : `Show ${prov.name} key`}>{show[prov.id] ? "Hide" : "Show"}</button>
+              <button type="button" onClick={() => void saveKey(prov.id, prov.name)} disabled={!user || (draft[prov.id] ?? "").trim().length < 8} className={primaryBtn + " !px-4 !py-2 text-[13px] disabled:opacity-40"}>Save</button>
+              {own[prov.id] && <button type="button" onClick={() => void removeKey(prov.id, prov.name)} className="border border-site-import-card rounded-[.75rem] px-3 text-[12px] text-site-import-muted-foreground cursor-pointer hover:text-site-import-foreground" aria-label={`Remove ${prov.name} key`}>Remove</button>}
+            </div>
+            {!user && <p className="text-site-import-muted-foreground text-[11px] mt-1 mb-0">Sign in to save your own keys.</p>}
+          </div>
+        ))}
+        {keyMsg && <p role="status" className="text-site-import-foreground text-[12px] mt-3 mb-0">{keyMsg}</p>}
       </div>
       <h2 className={label}>Browser tab</h2>
       <div className={`${card} p-5 mb-8`}>
         <label className="block text-site-import-foreground text-[13px] font-medium mb-2" htmlFor="tab-title">Tab name</label>
-        <input id="tab-title" value={p.tabTitle} maxLength={60} onChange={(e) => setPrefs({ tabTitle: e.target.value })} placeholder="WebPortal Hub" className="w-full bg-site-import-background border border-site-import-card rounded-[.75rem] px-4 py-2.5 text-site-import-foreground text-[14px]" />
+        <input id="tab-title" value={p.tabTitle} maxLength={60} onChange={(e) => setPrefs({ tabTitle: e.target.value })} placeholder="WebPortal Hub" className={inputCls} />
         <div className="text-site-import-foreground text-[13px] font-medium mt-5 mb-2">Tab logo</div>
         <div className="flex flex-wrap gap-2.5 items-center">
           <button onClick={() => setPrefs({ tabIcon: "" })} aria-pressed={!p.tabIcon} className={opt(!p.tabIcon) + " h-12 w-12 text-[10px] text-site-import-muted-foreground"}>Default</button>
@@ -214,6 +426,7 @@ function Browse({ live, loading, error, setView }: Props) {
   return (
     <div ref={frame} className="relative flex h-full min-h-0 w-full flex-col border-4 border-browser-frame bg-browser-frame">
       <div className="flex shrink-0 items-center gap-3 bg-site-import-background px-3 py-1 text-site-import-foreground">
+        <span className="text-site-import-muted-foreground text-[10px] tracking-[0.14em] uppercase shrink-0">{live.provider}</span>
         <span className="min-w-0 flex-1 truncate text-xs">{live.url}</span>
         {fullscreenError && <span role="alert" className="text-xs">{fullscreenError}</span>}
         <Button variant="ghost" size="icon" onClick={toggleFullscreen} aria-label={fullscreen ? "Exit fullscreen" : "Enter fullscreen"} title={fullscreen ? "Exit fullscreen" : "Enter fullscreen"}>{fullscreen ? <Minimize /> : <Maximize />}</Button>

@@ -23,11 +23,13 @@ export function clampIdle(n: number): number {
 function sanitize(p: Partial<Prefs>): Prefs {
   const motion: Motion = p.motion === "none" || p.motion === "intense" ? p.motion : "minimal";
   const icon = typeof p.tabIcon === "string" && (p.tabIcon.startsWith("data:image/") || p.tabIcon.startsWith("/")) ? p.tabIcon : "";
+  const provider: Provider = p.provider === "steel" || p.provider === "kernel" || p.provider === "hyperbrowser" ? p.provider : "hyperbrowser";
   return {
     motion,
     idleMinutes: clampIdle(Number(p.idleMinutes ?? DEFAULT_PREFS.idleMinutes)),
     tabTitle: String(p.tabTitle ?? "").slice(0, 60),
     tabIcon: icon.length <= MAX_ICON_BYTES * 1.4 ? icon : "",
+    provider,
   };
 }
 
