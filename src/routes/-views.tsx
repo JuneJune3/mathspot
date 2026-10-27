@@ -95,7 +95,7 @@ type ChatRoom = { id: string; name: string; created_by: string | null };
 type ChatMsg = { id: string; room_id: string; user_id: string; username: string; content: string; created_at: string };
 
 function Chat() {
-  const { user, ready } = useAuth();
+  const { user, username, ready } = useAuth();
   if (!ready)
     return (
       <div className="grid place-items-center min-h-full px-6 py-14">
@@ -115,7 +115,7 @@ function Chat() {
         </div>
       </div>
     );
-  return <ChatApp userId={user.id} username={useAuth().username} />;
+  return <ChatApp userId={user.id} username={username} />;
 }
 
 function ChatApp({ userId, username }: { userId: string; username: string }) {
