@@ -132,7 +132,7 @@ function ChatApp({ userId, username }: { userId: string; username: string }) {
     supabase.from("chat_rooms").select("id,name,created_by").order("created_at").then(({ data }) => {
       if (cancelled) return;
       setRooms((data as ChatRoom[]) ?? []);
-      if (data?.length) setActive((a) => a || data[0].id);
+      if (data?.length && data[0]) setActive((a) => a || data[0]!.id);
     });
     return () => { cancelled = true; };
   }, []);
