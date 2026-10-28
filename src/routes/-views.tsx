@@ -161,7 +161,9 @@ function ChatApp({ userId, username }: { userId: string; username: string }) {
     if (!content || !active) return;
     setDraft(""); setErr("");
     const { error } = await supabase.from("chat_messages").insert({ room_id: active, user_id: userId, username: username || "user", content });
-    if (error) setErr(error.message);
+    if (error) { setErr(error.message); return; }
+    const { data } = await supabase.from("chat_messages").select("id,room_id,user_id,username,content,created_at").eq("room_id", active).order("created_at");
+    if (data) setMessages(data as ChatMsg[]);
   };
 
   const create = async () => {
@@ -301,7 +303,7 @@ function Settings() {
                 onClick={() => setPrefs({ provider: prov.id })}
                 aria-pressed={selected}
                 title={ok ? `Use ${prov.name}` : `${prov.name} has no API key yet`}
-                className={`rounded-[.75rem] py-2.5 text-[13px] anim-press border border-site-import-card ${!ok ? "opacity-40 cursor-not-allowed text-site-import-muted-foreground bg-site-import-border" : selected ? "brand-gradient text-site-import-foreground cursor-pointer" : "text-site-import-muted-foreground hover:text-site-import-foreground bg-site-import-border cursor-pointer"}`}
+                className={`rounded-[.75rem] py-2.5 text-[13px] anim-press border border-site-import-card ${!ok ? "opacity-40 cursor-not-allowed text-site-import-muted-foreground bg-site-import-border" : selected ? "brand-gradient text-site-import-foreground cursor-pointer" : "text-site-import-foreground hover:text-site-import-foreground bg-site-import-border cursor-pointer hover:bg-site-import-card"}`}
               >
                 {prov.name}
                 <div className="text-[10px] tracking-[0.08em] uppercase opacity-70">{ok ? (own[prov.id] ? "Your key" : "Ready") : "No key"}</div>
