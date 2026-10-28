@@ -20,10 +20,14 @@ export function clampIdle(n: number): number {
   return Math.min(MAX_IDLE_MINUTES, Math.max(1, Math.round(n)));
 }
 
+export function normalizeProvider(v: unknown): Provider {
+  return v === "steel" || v === "kernel" || v === "hyperbrowser" ? v : "hyperbrowser";
+}
+
 function sanitize(p: Partial<Prefs>): Prefs {
   const motion: Motion = p.motion === "none" || p.motion === "intense" ? p.motion : "minimal";
   const icon = typeof p.tabIcon === "string" && (p.tabIcon.startsWith("data:image/") || p.tabIcon.startsWith("/")) ? p.tabIcon : "";
-  const provider: Provider = p.provider === "steel" || p.provider === "kernel" || p.provider === "hyperbrowser" ? p.provider : "hyperbrowser";
+  const provider = normalizeProvider(p.provider);
   return {
     motion,
     idleMinutes: clampIdle(Number(p.idleMinutes ?? DEFAULT_PREFS.idleMinutes)),
