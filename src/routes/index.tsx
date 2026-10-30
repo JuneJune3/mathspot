@@ -1,4 +1,23 @@
-import { useCallback, useRef, useState, type CSSProperties, type FormEvent } from "react";
+import { createFileRoute } from '@tanstack/react-router'
+import LinkGenerator from '../components/LinkGenerator' // 👈 1. Add this import at the top
+
+export const Route = createFileRoute('/')({
+  component: HomeComponent,
+})
+
+function HomeComponent() {
+  return (
+    <div className="min-h-screen bg-[#090A0F] text-white p-6">
+      <div className="max-w-4xl mx-auto space-y-8">
+        <h1 className="text-3xl font-bold text-[#9D4EDD]">MathSpot Directory</h1>
+        
+        {/* 👈 2. Drop your Link Generator right here */}
+        <LinkGenerator />
+        
+      </div>
+    </div>
+  )
+}import { useCallback, useRef, useState, type CSSProperties, type FormEvent } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { closeSite, openSite } from "@/lib/hyperbrowser.functions";
 import { useIdle, usePrefs, usePrefsEffects } from "@/lib/prefs";
