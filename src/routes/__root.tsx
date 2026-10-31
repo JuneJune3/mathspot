@@ -1,3 +1,4 @@
+import ProxySearch from '@/components/ProxySearch';
 import { createRootRoute, Link, Outlet } from '@tanstack/react-router'
 import { useState } from 'react';
 import { Music, Disc, X, Play, Square, Radio, Sparkles } from 'lucide-react';
