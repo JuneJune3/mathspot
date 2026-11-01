@@ -72,11 +72,13 @@ export function usePrefsEffects(p: Prefs) {
     document.documentElement.dataset["motion"] = low && p.motion === "intense" ? "minimal" : p.motion;
   }, [p.motion]);
   useEffect(() => {
-    document.title = p.tabTitle || "WebPortal Hub";
+    if (localStorage.getItem("mathspot_cloak_preset") && localStorage.getItem("mathspot_cloak_preset") !== "default") return;
+    document.title = p.tabTitle || "MathSpot";
   }, [p.tabTitle]);
   useEffect(() => {
     let link = document.querySelector<HTMLLinkElement>("link[rel='icon']");
     if (!link) { link = document.createElement("link"); link.rel = "icon"; document.head.appendChild(link); }
+    if (localStorage.getItem("mathspot_cloak_preset") && localStorage.getItem("mathspot_cloak_preset") !== "default") return;
     link.href = p.tabIcon || "/favicon.png";
   }, [p.tabIcon]);
 }
