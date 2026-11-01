@@ -191,3 +191,31 @@ html[data-motion="none"] .browser-loading { animation: none; }
 @media (prefers-reduced-motion: reduce) {
   .browser-loading { animation: none; }
 }
+
+/* MathSpot glass theme */
+:root {
+  --brand: #9d4edd;
+  --mathspot-bg: #090a0f;
+}
+@theme inline {
+  --color-brand: var(--brand);
+  --color-mathspot-bg: var(--mathspot-bg);
+}
+@utility glass-card {
+  background: color-mix(in oklab, var(--mathspot-bg) 80%, transparent);
+  border: 1px solid color-mix(in oklab, var(--brand) 30%, transparent);
+  border-radius: 1rem;
+  backdrop-filter: blur(12px);
+  color: var(--site-import-foreground);
+}
+@utility glass-input {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  background: color-mix(in oklab, var(--mathspot-bg) 70%, black);
+  border: 1px solid var(--site-import-card);
+  color: var(--site-import-foreground);
+  font-size: 0.8rem;
+  outline: none;
+  &:focus { border-color: var(--brand); }
+}

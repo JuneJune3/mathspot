@@ -1,4 +1,7 @@
 import React, { useState } from 'react';
+import { useServerFn } from '@tanstack/react-start';
+import { openSite } from '@/lib/hyperbrowser.functions';
+import { KEYS, read } from '@/lib/stealth';
 import { Search, Globe, RefreshCw, ExternalLink, Shield } from 'lucide-react';
 
 interface ProxySearchProps {
@@ -9,6 +12,8 @@ export default function ProxySearch({ defaultUrl = 'https://www.crazygames.com' 
   const [inputUrl, setInputUrl] = useState(defaultUrl);
   const [activeUrl, setActiveUrl] = useState(defaultUrl);
   const [isLoading, setIsLoading] = useState(false);
+  const [cloudError, setCloudError] = useState('');
+  const open = useServerFn(openSite);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,6 +32,16 @@ export default function ProxySearch({ defaultUrl = 'https://www.crazygames.com' 
     }
 
     setIsLoading(true);
+    setCloudError('');
+    if (read(KEYS.cloudKernel) === 'true') {
+      open({ data: { query: target } })
+        .then((live) => setActiveUrl(live.liveUrl))
+        .catch((err) => {
+          setCloudError(/unauthorized|authorization/i.test(String(err?.message)) ? 'Sign in to use the cloud browser. Loading the site directly instead.' : 'Cloud browser unavailable. Loading the site directly instead.');
+          setActiveUrl(target);
+        });
+      return;
+    }
     setActiveUrl(target);
   };
 
@@ -83,6 +98,7 @@ export default function ProxySearch({ defaultUrl = 'https://www.crazygames.com' 
         )}
       </form>
 
+      {cloudError && <p role="status" className="text-xs text-muted-foreground m-0">{cloudError}</p>}
       {/* Embed Display Container */}
       <div className="relative flex-1 min-h-[600px] w-full bg-[#050508] rounded-lg border border-slate-800 overflow-hidden">
         {isLoading && (

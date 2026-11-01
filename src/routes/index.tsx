@@ -22,12 +22,11 @@ import { useServerFn } from "@tanstack/react-start";
 import { closeSite, openSite } from "@/lib/hyperbrowser.functions";
 import { useIdle, usePrefs, usePrefsEffects } from "@/lib/prefs";
 import { ExtraView, type Live, type View } from "@/routes/-views";
-import logoC from "@/assets/logo7.asset.json";
 import { createFileRoute } from "@tanstack/react-router";
 import capturedCSS from "../styles/site.css?inline";
 
 export const Route = createFileRoute("/")({
-  head: () => ({ meta: [{ title: "WebPortal Hub" }, { name: "description", content: "Aperture browser: pinned apps, games and private browsing in one window." }, { property: "og:title", content: "WebPortal Hub" }, { property: "og:description", content: "Aperture browser: pinned apps, games and private browsing in one window." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }),
+  head: () => ({ meta: [{ title: "MathSpot" }, { name: "description", content: "Mathspot is the plsce where all math live" }, { property: "og:title", content: "MathSpot" }, { property: "og:description", content: "Mathspot is the plsce where all math live" }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }),
   component: Index,
 });
 
@@ -77,11 +76,8 @@ function Index() {
     <>
       <div className="bg-site-import-background! text-site-import-foreground selection:bg-none! selection:[background-position:0%_0%]! selection:[background-size:auto_auto]! selection:[background-repeat:repeat]! selection:[background-origin:padding-box]! selection:[background-clip:border-box]! selection:[background-attachment:scroll]! selection:bg-[#9166f552]!" data-site-import-document-lang="en">
         <div className="h-full" id="root">
-          <div className="bg-site-import-background flex h-dvh overflow-hidden w-full">
+          <div className="bg-site-import-background flex h-full overflow-hidden w-full">
             <aside className="bg-[hsl(240_14%_3%)] items-center border-site-import-border! border-r! flex flex-col shrink-0 gap-2 w-14 bg-site-import-background py-3 px-0 md:w-[76px] md:py-4 md:px-0">
-              <button onClick={() => setView("home")} aria-label="Aperture home" title="Home" className="cursor-pointer rounded-[13px] p-1 hover:opacity-80 transition-opacity">
-                <img src={logoC.url} alt="Aperture logo" className="h-8 w-8 rounded-[8px] object-cover" />
-              </button>
               <button onClick={() => setView("home")} aria-pressed={view === "home"} className={(view === "home" ? "bg-site-import-border" : "bg-transparent") + " bg-none rounded-[13px] text-site-import-muted-foreground cursor-pointer grid text-[100%] h-10 m-0 p-0 place-items-center normal-case duration-150 transition-colors ease-[cubic-bezier(0.4,0,0.2,1)] w-10 [appearance:button] [font-family:inherit] [font-feature-settings:inherit] [font-variation-settings:inherit] [font-weight:inherit] [letter-spacing:inherit] [line-height:inherit] hover:bg-site-import-border hover:text-site-import-foreground"} title="Home">
                 <svg className="block h-[18px] align-middle w-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...({ xmlns: "http://www.w3.org/2000/svg", width: "24", height: "24" } as any)}>
                   <path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8" />
