@@ -2,6 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import MusicPlayer from '../components/MusicPlayer'
 
 export const Route = createFileRoute('/music')({
+  head: () => ({ meta: [{ title: 'Music Hub — MathSpot' }, { name: 'description', content: 'Mathspot is the plsce where all math live' }, { property: 'og:title', content: 'Music Hub — MathSpot' }, { property: 'og:description', content: 'Mathspot is the plsce where all math live' }, { property: 'og:type', content: 'website' }, { name: 'twitter:card', content: 'summary' }] }),
   component: MusicPage,
 })
 
