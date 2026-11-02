@@ -169,8 +169,8 @@ function RootComponent() {
         </main>
         <SettingsModal isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
       {/* 🎵 Persistent Side Music Drawer */}
-      <div className={`fixed inset-y-0 right-0 z-50 w-80 md:w-96 bg-mathspot-bg/95 backdrop-blur-2xl border-l border-brand/30 shadow-2xl shadow-brand/20 p-6 flex flex-col justify-between transition-transform duration-300 ease-in-out ${
-        isMusicOpen ? 'translate-x-0' : 'translate-x-full'
+      <div style={{ transform: isMusicOpen ? 'none' : 'translateX(100%)' }} aria-hidden={!isMusicOpen} className={`fixed inset-y-0 right-0 z-50 w-80 md:w-96 bg-mathspot-bg/95 backdrop-blur-2xl border-l border-brand/30 shadow-2xl shadow-brand/20 p-6 flex flex-col justify-between transition-transform duration-300 ease-in-out ${
+        isMusicOpen ? 'visible' : 'invisible pointer-events-none'
       }`}>
         
         {/* Drawer Header */}
