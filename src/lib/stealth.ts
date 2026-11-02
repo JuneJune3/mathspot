@@ -65,10 +65,10 @@ function applyCloak() {
     if (p) { title = p.title; icon = p.icon; }
   }
   if (preset === "default") return; // let the page keep its own title/icon
-  document.title = title;
+  if (document.title !== title) document.title = title;
   let link = document.querySelector<HTMLLinkElement>("link[rel~='icon']");
   if (!link) { link = document.createElement("link"); link.rel = "icon"; document.head.appendChild(link); }
-  link.href = icon;
+  if (link.getAttribute("href") !== icon) link.href = icon;
 }
 
 /** Mounted once in the root layout: keeps the tab cloak applied and listens for the panic key. */
