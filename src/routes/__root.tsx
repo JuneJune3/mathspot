@@ -136,8 +136,8 @@ function RootComponent() {
   const isHome = useLocation({ select: (l) => l.pathname === "/" });
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [isMusicOpen, setIsMusicOpen] = useState(false);
-  const [currentVideoId, setCurrentVideoId] = useState(PRESETS[0].id);
-  const [currentTitle, setCurrentTitle] = useState(PRESETS[0].title);
+  const [currentVideoId, setCurrentVideoId] = useState(PRESETS[0]!.id);
+  const [currentTitle, setCurrentTitle] = useState(PRESETS[0]!.title);
   const [isPlaying, setIsPlaying] = useState(false);
   const presets = PRESETS;
 

@@ -1,28 +1,10 @@
-import { createFileRoute } from '@tanstack/react-router'
-import LinkGenerator from '../components/LinkGenerator' // 👈 1. Add this import at the top
-
-export const Route = createFileRoute('/')({
-  component: HomeComponent,
-})
-
-function HomeComponent() {
-  return (
-    <div className="min-h-screen bg-[#090A0F] text-white p-6">
-      <div className="max-w-4xl mx-auto space-y-8">
-        <h1 className="text-3xl font-bold text-[#9D4EDD]">MathSpot Directory</h1>
-        
-        {/* 👈 2. Drop your Link Generator right here */}
-        <LinkGenerator />
-        
-      </div>
-    </div>
-  )
-}import { useCallback, useRef, useState, type CSSProperties, type FormEvent } from "react";
+import { useCallback, useRef, useState, type CSSProperties, type FormEvent } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { closeSite, openSite } from "@/lib/hyperbrowser.functions";
 import { useIdle, usePrefs, usePrefsEffects } from "@/lib/prefs";
 import { ExtraView, type Live, type View } from "@/routes/-views";
 import { createFileRoute } from "@tanstack/react-router";
+import LinkGenerator from "@/components/LinkGenerator";
 import capturedCSS from "../styles/site.css?inline";
 
 export const Route = createFileRoute("/")({
@@ -246,6 +228,7 @@ function Index() {
                     <span className="group-hover:text-foreground text-site-import-muted-foreground text-[12px] overflow-hidden text-center text-ellipsis duration-150 transition-colors ease-[cubic-bezier(0.4,0,0.2,1)] whitespace-nowrap w-full">Twitch</span>
 </div>
                   </div>
+                  <div className="mt-12"><LinkGenerator /></div>
                   <p className="text-[hsl(240_7%_60%/.5)] text-[11px] leading-relaxed m-0 mt-12! text-center">Some sites refuse to load inside another site. When that happens, Aperture offers to open them in a full browser tab instead.</p>
                 </div>
                 )}

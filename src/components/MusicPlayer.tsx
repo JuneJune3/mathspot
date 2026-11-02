@@ -20,11 +20,11 @@ export default function MusicPlayer() {
 
     // Check if user pasted a YouTube link or video ID
     if (searchQuery.includes('v=')) {
-      const id = searchQuery.split('v=')[1].split('&')[0];
+      const id = searchQuery.split('v=')[1]?.split('&')[0] ?? '';
       setCurrentVideoId(id);
       setCurrentTitle('Custom YouTube Audio Stream');
     } else if (searchQuery.includes('youtu.be/')) {
-      const id = searchQuery.split('youtu.be/')[1].split('?')[0];
+      const id = searchQuery.split('youtu.be/')[1]?.split('?')[0] ?? '';
       setCurrentVideoId(id);
       setCurrentTitle('Custom YouTube Audio Stream');
     } else {
