@@ -112,6 +112,7 @@ export default function ProxySearch({ defaultUrl = 'https://www.crazygames.com' 
         )}
       </form>
 
+      <p className="text-[11px] text-muted-foreground m-0">Route: {tier}</p>
       {cloudError && <p role="status" className="text-xs text-muted-foreground m-0">{cloudError}</p>}
       {/* Embed Display Container */}
       <div className="relative flex-1 min-h-[600px] w-full bg-[#050508] rounded-lg border border-slate-800 overflow-hidden">
