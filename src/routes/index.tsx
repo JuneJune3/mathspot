@@ -17,6 +17,8 @@ export const Route = createFileRoute("/")({
 function Index() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [musicOpen, setMusicOpen] = useState(false);
+  const musicUsed = useRef(false);
+  if (musicOpen) musicUsed.current = true;
   const [view, setView] = useState<View>("home");
   const [live, setLive] = useState<Live | null>(null);
   const [loading, setLoading] = useState(false);
@@ -102,7 +104,7 @@ function Index() {
               </button>
             </aside>
             <div aria-hidden={!musicOpen} className={(musicOpen ? "" : "hidden ") + "fixed bottom-4 left-16 md:left-[88px] z-50 w-[min(92vw,640px)] max-h-[80vh] overflow-y-auto glass-card p-3"}>
-              <MusicPlayer />
+              {musicUsed.current && <MusicPlayer />}
             </div>
             <SettingsModal isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} onMore={() => { setSettingsOpen(false); setView("settings"); }} />
             <div className="flex flex-1 flex-col min-w-0">
