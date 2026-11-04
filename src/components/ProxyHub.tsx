@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { Shield, Globe, ArrowRight, Lock, ExternalLink } from 'lucide-react';
 
+export const PROXY_SERVER = 'https://uv.studentdirectory.app/service/';
+
 export default function ProxyHub() {
   const [targetUrl, setTargetUrl] = useState('');
   const [activeProxyUrl, setActiveProxyUrl] = useState('');
 
   // You can point this to your own hosted proxy server (e.g. Ultraviolet/Rammerhead) or a custom proxy worker
-  const primaryProxyServer = 'https://uv.studentdirectory.app/service/'; 
+  const primaryProxyServer = PROXY_SERVER;
 
   const handleLaunch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,7 +82,8 @@ export default function ProxyHub() {
               src={activeProxyUrl}
               title="Web Proxy View"
               className="w-full h-full border-none"
-              sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+              sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-pointer-lock allow-downloads"
+              allow="fullscreen; gamepad; autoplay"
             />
           ) : (
             <div className="text-center p-8 space-y-2">
