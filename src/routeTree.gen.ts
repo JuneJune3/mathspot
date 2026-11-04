@@ -13,7 +13,6 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as MusicRouteImport } from './routes/music'
 import { Route as ProxyRouteImport } from './routes/proxy'
-import { Route as T9flixRouteImport } from './routes/t9flix'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -35,25 +34,18 @@ const ProxyRoute = ProxyRouteImport.update({
   path: '/proxy',
   getParentRoute: () => rootRouteImport,
 } as any)
-const T9flixRoute = T9flixRouteImport.update({
-  id: '/t9flix',
-  path: '/t9flix',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/music': typeof MusicRoute
   '/proxy': typeof ProxyRoute
-  '/t9flix': typeof T9flixRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/music': typeof MusicRoute
   '/proxy': typeof ProxyRoute
-  '/t9flix': typeof T9flixRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -61,14 +53,13 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/music': typeof MusicRoute
   '/proxy': typeof ProxyRoute
-  '/t9flix': typeof T9flixRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/music' | '/proxy' | '/t9flix'
+  fullPaths: '/' | '/auth' | '/music' | '/proxy'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/music' | '/proxy' | '/t9flix'
-  id: '__root__' | '/' | '/auth' | '/music' | '/proxy' | '/t9flix'
+  to: '/' | '/auth' | '/music' | '/proxy'
+  id: '__root__' | '/' | '/auth' | '/music' | '/proxy'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -76,7 +67,6 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   MusicRoute: typeof MusicRoute
   ProxyRoute: typeof ProxyRoute
-  T9flixRoute: typeof T9flixRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -109,13 +99,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProxyRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/t9flix': {
-      id: '/t9flix'
-      path: '/t9flix'
-      fullPath: '/t9flix'
-      preLoaderRoute: typeof T9flixRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
@@ -124,7 +107,6 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   MusicRoute: MusicRoute,
   ProxyRoute: ProxyRoute,
-  T9flixRoute: T9flixRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
