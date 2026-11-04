@@ -129,7 +129,7 @@ export default function ProxySearch({ defaultUrl = 'https://www.crazygames.com' 
             title="Proxy Window"
             className="w-full h-full border-0 bg-white"
             onLoad={() => setIsLoading(false)}
-            sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-pointer-lock"
+            sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-pointer-lock allow-downloads"
             allow="fullscreen; gamepad; autoplay"
           />
         ) : (
