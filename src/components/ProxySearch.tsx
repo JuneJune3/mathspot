@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { useServerFn } from '@tanstack/react-start';
 import { openSite } from '@/lib/hyperbrowser.functions';
+import { checkFrame } from '@/lib/frame-check.functions';
 import { KEYS, read } from '@/lib/stealth';
+import { PROXY_SERVER } from './ProxyHub';
 import { Search, Globe, RefreshCw, ExternalLink, Shield } from 'lucide-react';
 
 interface ProxySearchProps {
@@ -13,7 +15,9 @@ export default function ProxySearch({ defaultUrl = 'https://www.crazygames.com' 
   const [activeUrl, setActiveUrl] = useState(defaultUrl);
   const [isLoading, setIsLoading] = useState(false);
   const [cloudError, setCloudError] = useState('');
+  const [tier, setTier] = useState<'Direct' | 'Proxy' | 'Cloud'>('Direct');
   const open = useServerFn(openSite);
+  const check = useServerFn(checkFrame);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,16 +37,26 @@ export default function ProxySearch({ defaultUrl = 'https://www.crazygames.com' 
 
     setIsLoading(true);
     setCloudError('');
-    if (read(KEYS.cloudKernel) === 'true') {
-      open({ data: { query: target } })
-        .then((live) => setActiveUrl(live.liveUrl))
-        .catch((err) => {
-          setCloudError(/unauthorized|authorization/i.test(String(err?.message)) ? 'Sign in to use the cloud browser. Loading the site directly instead.' : 'Cloud browser unavailable. Loading the site directly instead.');
-          setActiveUrl(target);
-        });
-      return;
+    void route(target);
+  };
+
+  // Tier 1: direct frame → Tier 2: repository proxy → Tier 3: cloud browser relay.
+  const route = async (target: string) => {
+    const forceCloud = read(KEYS.cloudKernel) === 'true';
+    if (!forceCloud) {
+      const direct = await check({ data: { url: target } }).catch(() => ({ frameable: false }));
+      if (direct.frameable) { setTier('Direct'); setActiveUrl(target); return; }
+      const proxied = `${PROXY_SERVER}${encodeURIComponent(target)}`;
+      const viaProxy = await check({ data: { url: proxied } }).catch(() => ({ frameable: false }));
+      if (viaProxy.frameable) { setTier('Proxy'); setActiveUrl(proxied); return; }
     }
-    setActiveUrl(target);
+    try {
+      const live = await open({ data: { query: target } });
+      setTier('Cloud'); setActiveUrl(live.liveUrl);
+    } catch (err) {
+      setCloudError(/unauthorized|authorization/i.test(String((err as Error)?.message)) ? 'This site blocks direct loading. Sign in to use the cloud browser.' : 'Every route failed. Try opening the site in a new tab.');
+      setTier('Direct'); setActiveUrl(target);
+    }
   };
 
   return (
@@ -98,6 +112,7 @@ export default function ProxySearch({ defaultUrl = 'https://www.crazygames.com' 
         )}
       </form>
 
+      <p className="text-[11px] text-muted-foreground m-0">Route: {tier}</p>
       {cloudError && <p role="status" className="text-xs text-muted-foreground m-0">{cloudError}</p>}
       {/* Embed Display Container */}
       <div className="relative flex-1 min-h-[600px] w-full bg-[#050508] rounded-lg border border-slate-800 overflow-hidden">
@@ -114,7 +129,7 @@ export default function ProxySearch({ defaultUrl = 'https://www.crazygames.com' 
             title="Proxy Window"
             className="w-full h-full border-0 bg-white"
             onLoad={() => setIsLoading(false)}
-            sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-pointer-lock"
+            sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-pointer-lock allow-downloads"
             allow="fullscreen; gamepad; autoplay"
           />
         ) : (

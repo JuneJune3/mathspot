@@ -5,6 +5,8 @@ import { useIdle, usePrefs, usePrefsEffects } from "@/lib/prefs";
 import { ExtraView, type Live, type View } from "@/routes/-views";
 import { createFileRoute } from "@tanstack/react-router";
 import LinkGenerator from "@/components/LinkGenerator";
+import MusicPlayer from "@/components/MusicPlayer";
+import { SettingsModal } from "@/components/SettingsModal";
 import capturedCSS from "../styles/site.css?inline";
 
 export const Route = createFileRoute("/")({
@@ -13,6 +15,10 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [musicOpen, setMusicOpen] = useState(false);
+  const musicUsed = useRef(false);
+  if (musicOpen) musicUsed.current = true;
   const [view, setView] = useState<View>("home");
   const [live, setLive] = useState<Live | null>(null);
   const [loading, setLoading] = useState(false);
@@ -81,7 +87,10 @@ function Index() {
                 </svg>
               </button>
               <div className="flex-1" />
-              <button onClick={() => setView("settings")} aria-pressed={view === "settings"} className={(view === "settings" ? "bg-site-import-border" : "bg-transparent") + " bg-none rounded-[13px] text-site-import-muted-foreground cursor-pointer grid text-[100%] h-10 m-0 p-0 place-items-center normal-case duration-150 transition-colors ease-[cubic-bezier(0.4,0,0.2,1)] w-10 [appearance:button] [font-family:inherit] [font-feature-settings:inherit] [font-variation-settings:inherit] [font-weight:inherit] [letter-spacing:inherit] [line-height:inherit] hover:bg-site-import-border hover:text-site-import-foreground"} title="Settings">
+              <button onClick={() => setMusicOpen((o) => !o)} aria-pressed={musicOpen} className={(musicOpen ? "bg-site-import-border" : "bg-transparent") + " rounded-[13px] text-site-import-muted-foreground cursor-pointer grid h-10 w-10 place-items-center transition-colors hover:bg-site-import-border hover:text-site-import-foreground"} title="Music">
+                <svg className="block h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" /></svg>
+              </button>
+              <button onClick={() => setSettingsOpen(true)} aria-pressed={settingsOpen} className={(view === "settings" ? "bg-site-import-border" : "bg-transparent") + " bg-none rounded-[13px] text-site-import-muted-foreground cursor-pointer grid text-[100%] h-10 m-0 p-0 place-items-center normal-case duration-150 transition-colors ease-[cubic-bezier(0.4,0,0.2,1)] w-10 [appearance:button] [font-family:inherit] [font-feature-settings:inherit] [font-variation-settings:inherit] [font-weight:inherit] [letter-spacing:inherit] [line-height:inherit] hover:bg-site-import-border hover:text-site-import-foreground"} title="Settings">
                 <svg className="block h-[18px] align-middle w-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...({ xmlns: "http://www.w3.org/2000/svg", width: "24", height: "24" } as any)}>
                   <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
                   <circle cx="12" cy="12" r="3" />
@@ -94,6 +103,10 @@ function Index() {
                 </svg>
               </button>
             </aside>
+            <div aria-hidden={!musicOpen} className={(musicOpen ? "" : "hidden ") + "fixed bottom-4 left-16 md:left-[88px] z-50 w-[min(92vw,640px)] max-h-[80vh] overflow-y-auto glass-card p-3"}>
+              {musicUsed.current && <MusicPlayer />}
+            </div>
+            <SettingsModal isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} onMore={() => { setSettingsOpen(false); setView("settings"); }} />
             <div className="flex flex-1 flex-col min-w-0">
               <div className="bg-[hsl(240_12%_4.5%)] items-center border-b! border-site-import-border! flex shrink-0 gap-1.5 h-11 pl-3 pr-3 bg-site-import-background">
                 <div className="no-scrollbar items-center flex flex-1 gap-1.5 overflow-x-auto [scrollbar-width:none]">
