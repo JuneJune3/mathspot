@@ -1,5 +1,5 @@
 // src/utils/proxy.js
-export async function fetchProxyUrl(targetUrl) {
+export async function fetchProxyUrl(targetUrl: string) {
   const useCloudKernel = localStorage.getItem('mathspot_use_cloud_kernel') === 'true';
   const apiKey = localStorage.getItem('mathspot_kernel_api_key') || '';
 

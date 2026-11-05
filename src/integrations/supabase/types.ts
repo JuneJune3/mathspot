@@ -14,6 +14,63 @@ export type Database = {
   }
   public: {
     Tables: {
+      browser_sessions: {
+        Row: {
+          id: string
+          last_seen_at: string
+          provider: string
+          session_id: string
+          started_at: string
+          url: string
+          user_id: string | null
+        }
+        Insert: {
+          id?: string
+          last_seen_at?: string
+          provider: string
+          session_id: string
+          started_at?: string
+          url?: string
+          user_id?: string | null
+        }
+        Update: {
+          id?: string
+          last_seen_at?: string
+          provider?: string
+          session_id?: string
+          started_at?: string
+          url?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      call_rooms: {
+        Row: {
+          code: string
+          created_at: string
+          host_id: string
+          id: string
+          last_seen_at: string
+          name: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          host_id: string
+          id?: string
+          last_seen_at?: string
+          name?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          host_id?: string
+          id?: string
+          last_seen_at?: string
+          name?: string
+        }
+        Relationships: []
+      }
       chat_messages: {
         Row: {
           content: string
@@ -70,6 +127,57 @@ export type Database = {
         }
         Relationships: []
       }
+      game_submissions: {
+        Row: {
+          category: string
+          created_at: string
+          description: string
+          file_name: string | null
+          file_path: string | null
+          game_url: string | null
+          id: string
+          kind: string
+          review_note: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          submitted_by: string
+          title: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          description?: string
+          file_name?: string | null
+          file_path?: string | null
+          game_url?: string | null
+          id?: string
+          kind?: string
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submitted_by: string
+          title: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string
+          file_name?: string | null
+          file_path?: string | null
+          game_url?: string | null
+          id?: string
+          kind?: string
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submitted_by?: string
+          title?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -109,15 +217,75 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      vault_items: {
+        Row: {
+          created_at: string
+          id: string
+          notes: string
+          password: string
+          site_name: string
+          site_url: string
+          updated_at: string
+          user_id: string
+          username: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notes?: string
+          password: string
+          site_name: string
+          site_url?: string
+          updated_at?: string
+          user_id: string
+          username?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string
+          password?: string
+          site_name?: string
+          site_url?: string
+          updated_at?: string
+          user_id?: string
+          username?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -244,6 +412,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+    },
   },
 } as const

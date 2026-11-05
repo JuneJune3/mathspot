@@ -9,8 +9,8 @@ interface UploadGameModalProps {
     category: string;
     description: string;
     type: 'file' | 'url';
-    gameUrl?: string;
-    file?: File;
+    gameUrl?: string | undefined;
+    file?: File | undefined;
   }) => Promise<void>;
 }
 
@@ -30,7 +30,14 @@ export default function UploadGameModal({ isOpen, onClose, onSubmit }: UploadGam
     e.preventDefault();
     setLoading(true);
     try {
-      await onSubmit({ title, category, description, type: uploadType, gameUrl, file: file || undefined });
+      await onSubmit({
+        title,
+        category,
+        description,
+        type: uploadType,
+        ...(gameUrl ? { gameUrl } : {}),
+        ...(file ? { file } : {}),
+      });
       setSubmitted(true);
       setTimeout(() => {
         setSubmitted(false);
