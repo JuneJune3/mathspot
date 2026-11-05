@@ -283,6 +283,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_approved_game_file: { Args: { _path: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "user"
