@@ -104,7 +104,7 @@ export function CallRoom({ roomId = "MathSpot-Room-1", onLeave }) {
   };
 
   return (
-    <div className="max-w-2xl w-full mx-auto p-6 rounded-2xl bg-[#090A0F]/90 border border-[#9D4EDD]/30 backdrop-blur-md text-white shadow-2xl space-y-6">
+    <div className="max-w-2xl w-full mx-auto p-6 rounded-2xl bg-[#090A0F]/90 border border-[#E5E5E5]/30 backdrop-blur-md text-white shadow-2xl space-y-6">
       {/* Hidden local audio element */}
       <audio ref={localAudioRef} autoPlay muted />
 
@@ -113,7 +113,7 @@ export function CallRoom({ roomId = "MathSpot-Room-1", onLeave }) {
         <div>
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-            <h2 className="text-md font-semibold text-[#9D4EDD]">Audio Call Room</h2>
+            <h2 className="text-md font-semibold text-[#E5E5E5]">Audio Call Room</h2>
           </div>
           <p className="text-xs text-gray-400 mt-0.5">Room ID: {roomId}</p>
         </div>
@@ -130,7 +130,7 @@ export function CallRoom({ roomId = "MathSpot-Room-1", onLeave }) {
             className="flex items-center justify-between p-4 rounded-xl bg-black/50 border border-white/5"
           >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-[#9D4EDD]/20 border border-[#9D4EDD] flex items-center justify-center font-bold text-[#9D4EDD]">
+              <div className="w-10 h-10 rounded-full bg-[#E5E5E5]/20 border border-[#E5E5E5] flex items-center justify-center font-bold text-[#E5E5E5]">
                 {participant.name.charAt(0)}
               </div>
               <div>

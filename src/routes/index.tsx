@@ -5,7 +5,8 @@ import { useIdle, usePrefs, usePrefsEffects } from "@/lib/prefs";
 import { ExtraView, type Live, type View } from "@/routes/-views";
 import { createFileRoute } from "@tanstack/react-router";
 import LinkGenerator from "@/components/LinkGenerator";
-import MusicPlayer from "@/components/MusicPlayer";
+import MusicPill from "@/components/MusicPill";
+import SlotBadges from "@/components/SlotBadges";
 import { SettingsModal } from "@/components/SettingsModal";
 import capturedCSS from "../styles/site.css?inline";
 
@@ -17,8 +18,6 @@ export const Route = createFileRoute("/")({
 function Index() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [musicOpen, setMusicOpen] = useState(false);
-  const musicUsed = useRef(false);
-  if (musicOpen) musicUsed.current = true;
   const [view, setView] = useState<View>("home");
   const [live, setLive] = useState<Live | null>(null);
   const [loading, setLoading] = useState(false);
@@ -62,7 +61,7 @@ function Index() {
   };
   return (<><style>{capturedCSS.replace(/(<\/|<)(s)(tyle)/gi, (_, prefix, letter, rest) => prefix + (letter === "s" ? "\\73 " : "\\53 ") + rest)}</style>
     <>
-      <div className="bg-site-import-background! text-site-import-foreground selection:bg-none! selection:[background-position:0%_0%]! selection:[background-size:auto_auto]! selection:[background-repeat:repeat]! selection:[background-origin:padding-box]! selection:[background-clip:border-box]! selection:[background-attachment:scroll]! selection:bg-[#9166f552]!" data-site-import-document-lang="en">
+      <div className="bg-site-import-background! text-site-import-foreground selection:bg-none! selection:[background-position:0%_0%]! selection:[background-size:auto_auto]! selection:[background-repeat:repeat]! selection:[background-origin:padding-box]! selection:[background-clip:border-box]! selection:[background-attachment:scroll]! selection:bg-[#ffffff33]!" data-site-import-document-lang="en">
         <div className="h-full" id="root">
           <div className="bg-site-import-background flex h-full overflow-hidden w-full">
             <aside className="bg-[hsl(240_14%_3%)] items-center border-site-import-border! border-r! flex flex-col shrink-0 gap-2 w-14 bg-site-import-background py-3 px-0 md:w-[76px] md:py-4 md:px-0">
@@ -103,12 +102,10 @@ function Index() {
                 </svg>
               </button>
             </aside>
-            <div aria-hidden={!musicOpen} className={(musicOpen ? "" : "hidden ") + "fixed bottom-4 left-16 md:left-[88px] z-50 w-[min(92vw,640px)] max-h-[80vh] overflow-y-auto glass-card p-3"}>
-              {musicUsed.current && <MusicPlayer />}
-            </div>
+            {musicOpen && <MusicPill onClose={() => setMusicOpen(false)} />}
             <SettingsModal isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} onMore={() => { setSettingsOpen(false); setView("settings"); }} />
             <div className="flex flex-1 flex-col min-w-0">
-              <div className="bg-[hsl(240_12%_4.5%)] items-center border-b! border-site-import-border! flex shrink-0 gap-1.5 h-11 pl-3 pr-3 bg-site-import-background">
+              <div className={(view === "home" ? "hidden " : "flex ") + "bg-[hsl(240_12%_4.5%)] items-center border-b! border-site-import-border! shrink-0 gap-1.5 h-11 pl-3 pr-3 bg-site-import-background"}>
                 <div className="no-scrollbar items-center flex flex-1 gap-1.5 overflow-x-auto [scrollbar-width:none]">
                   <button className="group shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] items-center bg-site-import-border bg-none rounded-[.75rem] shadow-[var(--tw-ring-offset-shadow,0_0_#0000),var(--tw-ring-shadow,0_0_#0000),var(--tw-shadow)] text-site-import-foreground cursor-pointer flex text-[13px] gap-2 h-8 m-0 max-w-[210px] min-w-[120px] p-0 pl-2.5! pr-2.5! relative text-left normal-case duration-200 transition-all ease-[cubic-bezier(0.4,0,0.2,1)] [animation-duration:0.2s] [appearance:button] [font-family:inherit] [font-feature-settings:inherit] [font-variation-settings:inherit] [font-weight:inherit] [letter-spacing:inherit] [line-height:inherit]">
                     <span className="bg-[#ffffff40] rounded-[9999px] shrink-0 h-2 w-2" />
@@ -129,7 +126,7 @@ function Index() {
                 </div>
                 <span className="items-center bg-[#34d3991a] border-site-import-accent! rounded-[9999px] border! text-[#6ee7b7e6] shrink-0 text-[10px] font-medium gap-1.5 tracking-[0.14em] pb-1 pl-2.5 pr-2.5 pt-1 uppercase hidden md:flex"><span className="bg-emerald-400 rounded-[9999px] h-1.5 w-1.5 bg-[#34d399]" />Private session</span>
               </div>
-              <div className="bg-[hsl(240_12%_5%)] items-center border-b! border-site-import-border! flex shrink-0 gap-1.5 h-14 pl-3 pr-3 bg-[#0b0b0e]">
+              <div className={(view === "home" ? "hidden " : "flex ") + "bg-[hsl(240_12%_5%)] items-center border-b! border-site-import-border! shrink-0 gap-1.5 h-14 pl-3 pr-3 bg-[#0b0b0e]"}>
                 <div className="items-center gap-0.5 hidden md:flex">
                   <button className="bg-transparent bg-none rounded-[.75rem] text-site-import-muted-foreground cursor-pointer grid text-[100%] h-8 m-0 p-0 place-items-center normal-case duration-150 transition-colors ease-[cubic-bezier(0.4,0,0.2,1)] w-8 [appearance:button] [font-family:inherit] [font-feature-settings:inherit] [font-variation-settings:inherit] [font-weight:inherit] [letter-spacing:inherit] [line-height:inherit] disabled:opacity-30 hover:bg-site-import-border hover:text-site-import-foreground hover:disabled:bg-transparent" disabled title="Back">
                     <svg className="block h-4 align-middle w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...({ xmlns: "http://www.w3.org/2000/svg", width: "24", height: "24" } as any)}>
@@ -156,7 +153,7 @@ function Index() {
                     </svg>
                   </button>
                 </div>
-                <form onSubmit={submit} className="group items-center bg-site-import-border border-site-import-border! rounded-[9999px] border! flex flex-1 gap-2 h-9 pl-3.5 pr-3.5 relative duration-150 transition-colors ease-[cubic-bezier(0.4,0,0.2,1)] focus-within:bg-site-import-border focus-within:border-[hsl(258_88%_68%/.5)]!">
+                <form onSubmit={submit} className="group items-center bg-site-import-border border-site-import-border! rounded-[9999px] border! flex flex-1 gap-2 h-9 pl-3.5 pr-3.5 relative duration-150 transition-colors ease-[cubic-bezier(0.4,0,0.2,1)] focus-within:bg-site-import-border focus-within:border-[hsl(0_0%_80%/.5)]!">
                   <svg className="text-[#34d399cc] block shrink-0 h-3 align-middle w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...({ xmlns: "http://www.w3.org/2000/svg", width: "24", height: "24" } as any)}>
                     <rect x="3" y="11" rx="2" ry="2" {...({ width: "18", height: "11" } as any)} />
                     <path d="M7 11V7a5 5 0 0 1 10 0v4" />
@@ -180,7 +177,7 @@ function Index() {
                     <h1 className="font-heading text-site-import-foreground font-semibold m-0 text-[36px] tracking-[-1.08px] leading-10 md:text-[48px] md:tracking-[-1.44px] md:leading-12">Where do you want to go?</h1>
                     <p className="text-site-import-muted-foreground text-[0.875rem] leading-relaxed m-0 ml-auto! mr-auto! mt-3! max-w-md">Your pinned apps, tabs and history in one place. Anything you open lives inside this window.</p>
                   </div>
-                  <form onSubmit={submit} className="group shadow-[0_20px_60px_-30px_rgba(124,92,255,0.8)] items-center bg-site-import-border border-site-import-card! rounded-[1rem] border! shadow-[var(--tw-ring-offset-shadow,0_0_#0000),var(--tw-ring-shadow,0_0_#0000),var(--tw-shadow)] flex gap-3 mb-12 pb-3 pl-4 pr-4 pt-3 duration-150 transition-all ease-[cubic-bezier(0.4,0,0.2,1)] focus-within:bg-site-import-border focus-within:border-[hsl(258_88%_68%/.6)]!">
+                  <form onSubmit={submit} className="group shadow-[0_20px_60px_-30px_rgba(0,0,0,0.8)] items-center bg-site-import-border border-site-import-card! rounded-[1rem] border! shadow-[var(--tw-ring-offset-shadow,0_0_#0000),var(--tw-ring-shadow,0_0_#0000),var(--tw-shadow)] flex gap-3 mb-12 pb-3 pl-4 pr-4 pt-3 duration-150 transition-all ease-[cubic-bezier(0.4,0,0.2,1)] focus-within:bg-site-import-border focus-within:border-[hsl(258_88%_68%/.6)]!">
                     <svg className="text-site-import-muted-foreground block shrink-0 h-4 align-middle w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...({ xmlns: "http://www.w3.org/2000/svg", width: "24", height: "24" } as any)}>
                       <circle cx="11" cy="11" r="8" />
                       <path d="m21 21-4.3-4.3" />
@@ -193,6 +190,7 @@ function Index() {
                       </svg>
                     </button>
                   </form>
+                  <SlotBadges />
                   <div className="items-baseline flex justify-between mb-3">
                     <h2 className="font-heading text-site-import-muted-foreground text-[13px] font-medium tracking-[0.16em] m-0 uppercase">Pinned</h2>
                     <span className="font-mono text-[hsl(240_7%_60%/.6)] text-[11px]">6 sites</span>

@@ -27,13 +27,13 @@ export default function ProxyHub() {
   return (
     <div className="w-full max-w-4xl mx-auto space-y-6 text-white">
       {/* Proxy Navigation Header */}
-      <div className="p-6 rounded-2xl bg-[#090A0F]/80 backdrop-blur-xl border border-[#9D4EDD]/30 shadow-xl shadow-[#9D4EDD]/10">
+      <div className="p-6 rounded-2xl bg-[#090A0F]/80 backdrop-blur-xl border border-[#E5E5E5]/30 shadow-xl shadow-[#E5E5E5]/10">
         <div className="flex items-center gap-3 mb-4">
-          <div className="p-2 rounded-lg bg-[#9D4EDD]/20 border border-[#9D4EDD]/40 text-[#9D4EDD]">
+          <div className="p-2 rounded-lg bg-[#E5E5E5]/20 border border-[#E5E5E5]/40 text-[#E5E5E5]">
             <Shield className="w-6 h-6 animate-pulse" />
           </div>
           <div>
-            <h2 className="text-xl font-bold tracking-wide text-[#9D4EDD]">MathSpot Secure Proxy</h2>
+            <h2 className="text-xl font-bold tracking-wide text-[#E5E5E5]">MathSpot Secure Proxy</h2>
             <p className="text-xs text-gray-400">Encrypted Web Browser • Bypass Network Restrictions</p>
           </div>
         </div>
@@ -46,11 +46,11 @@ export default function ProxyHub() {
             placeholder="Enter URL to browse securely (e.g., wikipedia.org)..."
             value={targetUrl}
             onChange={(e) => setTargetUrl(e.target.value)}
-            className="w-full pl-12 pr-32 py-3 rounded-xl bg-black/60 border border-gray-800 text-white placeholder-gray-500 focus:border-[#9D4EDD] focus:outline-none focus:ring-1 focus:ring-[#9D4EDD] transition-all text-sm"
+            className="w-full pl-12 pr-32 py-3 rounded-xl bg-black/60 border border-gray-800 text-white placeholder-gray-500 focus:border-[#E5E5E5] focus:outline-none focus:ring-1 focus:ring-[#E5E5E5] transition-all text-sm"
           />
           <button
             type="submit"
-            className="absolute right-2 px-4 py-1.5 bg-[#9D4EDD] hover:bg-[#8035cb] text-black font-semibold text-xs rounded-lg transition-all flex items-center gap-1"
+            className="absolute right-2 px-4 py-1.5 bg-[#E5E5E5] hover:bg-[#8035cb] text-black font-semibold text-xs rounded-lg transition-all flex items-center gap-1"
           >
             Launch <ArrowRight className="w-3 h-3" />
           </button>
@@ -58,10 +58,10 @@ export default function ProxyHub() {
       </div>
 
       {/* Embed Frame / Proxy Screen */}
-      <div className="p-6 rounded-2xl bg-[#090A0F]/80 backdrop-blur-xl border border-[#9D4EDD]/30 shadow-xl shadow-[#9D4EDD]/10 space-y-4">
+      <div className="p-6 rounded-2xl bg-[#090A0F]/80 backdrop-blur-xl border border-[#E5E5E5]/30 shadow-xl shadow-[#E5E5E5]/10 space-y-4">
         <div className="flex items-center justify-between border-b border-gray-800 pb-3">
           <div className="flex items-center gap-2 text-xs text-gray-400">
-            <Lock className="w-4 h-4 text-[#9D4EDD]" />
+            <Lock className="w-4 h-4 text-[#E5E5E5]" />
             <span>Proxy Status: {activeProxyUrl ? 'Active' : 'Standby'}</span>
           </div>
           {activeProxyUrl && (
@@ -69,14 +69,14 @@ export default function ProxyHub() {
               href={activeProxyUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-xs text-[#9D4EDD] hover:underline flex items-center gap-1"
+              className="text-xs text-[#E5E5E5] hover:underline flex items-center gap-1"
             >
               Open in Full Tab <ExternalLink className="w-3 h-3" />
             </a>
           )}
         </div>
 
-        <div className="aspect-[16/10] w-full rounded-xl overflow-hidden border border-[#9D4EDD]/20 bg-black/90 flex items-center justify-center">
+        <div className="aspect-[16/10] w-full rounded-xl overflow-hidden border border-[#E5E5E5]/20 bg-black/90 flex items-center justify-center">
           {activeProxyUrl ? (
             <iframe
               src={activeProxyUrl}
@@ -87,7 +87,7 @@ export default function ProxyHub() {
             />
           ) : (
             <div className="text-center p-8 space-y-2">
-              <Globe className="w-12 h-12 text-[#9D4EDD]/40 mx-auto" />
+              <Globe className="w-12 h-12 text-[#E5E5E5]/40 mx-auto" />
               <p className="text-sm font-medium text-gray-300">No active proxy session</p>
               <p className="text-xs text-gray-500">Enter a website URL above to start browsing securely.</p>
             </div>

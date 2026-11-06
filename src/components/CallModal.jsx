@@ -95,14 +95,14 @@ export function CallModal({ isOpen, onClose, roomId = "MathSpot-Room-1" }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
       <audio ref={localAudioRef} autoPlay muted />
       
-      <div className="w-full max-w-lg rounded-2xl bg-[#090A0F] border border-[#9D4EDD]/30 p-6 shadow-2xl space-y-6 text-white">
+      <div className="w-full max-w-lg rounded-2xl bg-[#090A0F] border border-[#E5E5E5]/30 p-6 shadow-2xl space-y-6 text-white">
         
         {/* Header */}
         <div className="flex items-center justify-between border-b border-white/10 pb-4">
           <div>
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-              <h2 className="text-sm font-semibold text-[#9D4EDD]">Audio Call Room</h2>
+              <h2 className="text-sm font-semibold text-[#E5E5E5]">Audio Call Room</h2>
             </div>
             <p className="text-xs text-gray-400 mt-0.5">{roomId}</p>
           </div>
@@ -124,7 +124,7 @@ export function CallModal({ isOpen, onClose, roomId = "MathSpot-Room-1" }) {
           {participants.map((p) => (
             <div key={p.id} className="flex items-center justify-between p-3 rounded-xl bg-black/50 border border-white/5">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-full bg-[#9D4EDD]/20 border border-[#9D4EDD] flex items-center justify-center text-xs font-bold text-[#9D4EDD]">
+                <div className="w-8 h-8 rounded-full bg-[#E5E5E5]/20 border border-[#E5E5E5] flex items-center justify-center text-xs font-bold text-[#E5E5E5]">
                   {p.name.charAt(0)}
                 </div>
                 <div>
