@@ -11,6 +11,7 @@ import {
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 import { useStealth } from "@/lib/stealth";
+import { useCloudSync } from "@/lib/cloud-sync";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -124,6 +125,7 @@ const NAV = [
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   useStealth();
+  useCloudSync();
   const isHome = useLocation({ select: (l) => l.pathname === "/" });
   useEffect(() => {
     try { document.documentElement.classList.toggle("low-perf", localStorage.getItem("low_perf") === "true"); } catch { /* storage blocked */ }
