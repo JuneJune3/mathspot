@@ -581,7 +581,7 @@ input:where([type="submit"]) {
   --card-foreground: 240 14% 96%;
   --popover: 240 11% 7%;
   --popover-foreground: 240 14% 96%;
-  --primary: 258 88% 68%;
+  --primary: 0 0% 96%;
   --primary-foreground: 0 0% 100%;
   --secondary: 240 9% 12%;
   --secondary-foreground: 240 14% 96%;
@@ -606,7 +606,7 @@ input:where([type="submit"]) {
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
   --sidebar-background: 240 12% 5%;
   --sidebar-foreground: 240 14% 96%;
-  --sidebar-primary: 258 88% 68%;
+  --sidebar-primary: 0 0% 96%;
   --sidebar-primary-foreground: 0 0% 100%;
   --sidebar-accent: 240 9% 12%;
   --sidebar-accent-foreground: 240 14% 96%;
@@ -621,7 +621,7 @@ input:where([type="submit"]) {
   --card-foreground: 240 14% 96%;
   --popover: 240 11% 7%;
   --popover-foreground: 240 14% 96%;
-  --primary: 258 88% 68%;
+  --primary: 0 0% 96%;
   --primary-foreground: 0 0% 100%;
   --secondary: 240 9% 12%;
   --secondary-foreground: 240 14% 96%;

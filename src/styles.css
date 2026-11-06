@@ -154,8 +154,8 @@
   --site-import-background: oklch(0.14077 0.00439 285.82);
   --foreground: oklch(0.965 0.00398 286.32);
   --site-import-foreground: oklch(0.965 0.00398 286.32);
-  --primary: oklch(0.62531 0.20485 293.45);
-  --site-import-primary: oklch(0.62531 0.20485 293.45);
+  --primary: oklch(0.97 0 0);
+  --site-import-primary: oklch(0.32 0 0);
   --primary-foreground: oklch(0.985 0 0);
   --site-import-primary-foreground: oklch(0.985 0 0);
   --accent: oklch(0.77294 0.15349 163.22 / 0.2);
@@ -194,7 +194,7 @@ html[data-motion="none"] .browser-loading { animation: none; }
 
 /* MathSpot glass theme */
 :root {
-  --brand: #9d4edd;
+  --brand: #f5f5f5;
   --mathspot-bg: #090a0f;
 }
 @theme inline {

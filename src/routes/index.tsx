@@ -62,7 +62,7 @@ function Index() {
   };
   return (<><style>{capturedCSS.replace(/(<\/|<)(s)(tyle)/gi, (_, prefix, letter, rest) => prefix + (letter === "s" ? "\\73 " : "\\53 ") + rest)}</style>
     <>
-      <div className="bg-site-import-background! text-site-import-foreground selection:bg-none! selection:[background-position:0%_0%]! selection:[background-size:auto_auto]! selection:[background-repeat:repeat]! selection:[background-origin:padding-box]! selection:[background-clip:border-box]! selection:[background-attachment:scroll]! selection:bg-[#9166f552]!" data-site-import-document-lang="en">
+      <div className="bg-site-import-background! text-site-import-foreground selection:bg-none! selection:[background-position:0%_0%]! selection:[background-size:auto_auto]! selection:[background-repeat:repeat]! selection:[background-origin:padding-box]! selection:[background-clip:border-box]! selection:[background-attachment:scroll]! selection:bg-[#ffffff33]!" data-site-import-document-lang="en">
         <div className="h-full" id="root">
           <div className="bg-site-import-background flex h-full overflow-hidden w-full">
             <aside className="bg-[hsl(240_14%_3%)] items-center border-site-import-border! border-r! flex flex-col shrink-0 gap-2 w-14 bg-site-import-background py-3 px-0 md:w-[76px] md:py-4 md:px-0">
@@ -156,7 +156,7 @@ function Index() {
                     </svg>
                   </button>
                 </div>
-                <form onSubmit={submit} className="group items-center bg-site-import-border border-site-import-border! rounded-[9999px] border! flex flex-1 gap-2 h-9 pl-3.5 pr-3.5 relative duration-150 transition-colors ease-[cubic-bezier(0.4,0,0.2,1)] focus-within:bg-site-import-border focus-within:border-[hsl(258_88%_68%/.5)]!">
+                <form onSubmit={submit} className="group items-center bg-site-import-border border-site-import-border! rounded-[9999px] border! flex flex-1 gap-2 h-9 pl-3.5 pr-3.5 relative duration-150 transition-colors ease-[cubic-bezier(0.4,0,0.2,1)] focus-within:bg-site-import-border focus-within:border-[hsl(0_0%_80%/.5)]!">
                   <svg className="text-[#34d399cc] block shrink-0 h-3 align-middle w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...({ xmlns: "http://www.w3.org/2000/svg", width: "24", height: "24" } as any)}>
                     <rect x="3" y="11" rx="2" ry="2" {...({ width: "18", height: "11" } as any)} />
                     <path d="M7 11V7a5 5 0 0 1 10 0v4" />
@@ -180,7 +180,7 @@ function Index() {
                     <h1 className="font-heading text-site-import-foreground font-semibold m-0 text-[36px] tracking-[-1.08px] leading-10 md:text-[48px] md:tracking-[-1.44px] md:leading-12">Where do you want to go?</h1>
                     <p className="text-site-import-muted-foreground text-[0.875rem] leading-relaxed m-0 ml-auto! mr-auto! mt-3! max-w-md">Your pinned apps, tabs and history in one place. Anything you open lives inside this window.</p>
                   </div>
-                  <form onSubmit={submit} className="group shadow-[0_20px_60px_-30px_rgba(124,92,255,0.8)] items-center bg-site-import-border border-site-import-card! rounded-[1rem] border! shadow-[var(--tw-ring-offset-shadow,0_0_#0000),var(--tw-ring-shadow,0_0_#0000),var(--tw-shadow)] flex gap-3 mb-12 pb-3 pl-4 pr-4 pt-3 duration-150 transition-all ease-[cubic-bezier(0.4,0,0.2,1)] focus-within:bg-site-import-border focus-within:border-[hsl(258_88%_68%/.6)]!">
+                  <form onSubmit={submit} className="group shadow-[0_20px_60px_-30px_rgba(0,0,0,0.8)] items-center bg-site-import-border border-site-import-card! rounded-[1rem] border! shadow-[var(--tw-ring-offset-shadow,0_0_#0000),var(--tw-ring-shadow,0_0_#0000),var(--tw-shadow)] flex gap-3 mb-12 pb-3 pl-4 pr-4 pt-3 duration-150 transition-all ease-[cubic-bezier(0.4,0,0.2,1)] focus-within:bg-site-import-border focus-within:border-[hsl(258_88%_68%/.6)]!">
                     <svg className="text-site-import-muted-foreground block shrink-0 h-4 align-middle w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...({ xmlns: "http://www.w3.org/2000/svg", width: "24", height: "24" } as any)}>
                       <circle cx="11" cy="11" r="8" />
                       <path d="m21 21-4.3-4.3" />

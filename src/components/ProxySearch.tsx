@@ -79,7 +79,7 @@ export default function ProxySearch({ defaultUrl = 'https://www.crazygames.com' 
 
         <button
           type="submit"
-          className="flex items-center gap-2 bg-[#9D4EDD] hover:bg-purple-600 px-4 py-2 rounded-md text-xs font-semibold text-white transition active:scale-95"
+          className="flex items-center gap-2 bg-[#E5E5E5] hover:bg-purple-600 px-4 py-2 rounded-md text-xs font-semibold text-white transition active:scale-95"
         >
           <Search className="w-4 h-4" /> Go
         </button>
@@ -118,7 +118,7 @@ export default function ProxySearch({ defaultUrl = 'https://www.crazygames.com' 
       <div className="relative flex-1 min-h-[600px] w-full bg-[#050508] rounded-lg border border-slate-800 overflow-hidden">
         {isLoading && (
           <div className="absolute inset-0 bg-[#090A0F]/90 backdrop-blur-sm z-10 flex flex-col items-center justify-center gap-3">
-            <div className="w-8 h-8 border-4 border-[#9D4EDD] border-t-transparent rounded-full animate-spin" />
+            <div className="w-8 h-8 border-4 border-[#E5E5E5] border-t-transparent rounded-full animate-spin" />
             <span className="text-xs text-slate-400 font-mono">Routing through secure stream...</span>
           </div>
         )}
