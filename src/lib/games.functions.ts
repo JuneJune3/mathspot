@@ -48,7 +48,7 @@ export const submitGame = createServerFn({ method: "POST" })
       description: data.description,
       kind: data.kind,
       game_url: data.kind === "url" ? (data.gameUrl ?? null) : null,
-      file_path: data.kind === "file" ? data.filePath : null,
+      file_path: data.kind === "file" ? (data.filePath ?? null) : null,
       file_name: data.kind === "file" ? (data.fileName ?? "game file") : null,
       status: "pending",
       submitted_by: context.userId,
