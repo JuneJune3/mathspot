@@ -116,11 +116,6 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
-const NAV = [
-  { to: "/", label: "Home" },
-  { to: "/music", label: "Music Hub" },
-  { to: "/proxy", label: "Proxy" },
-] as const;
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
@@ -134,15 +129,6 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <div className="h-dvh bg-mathspot-bg text-site-import-foreground relative flex flex-col overflow-hidden">
-        <header className="shrink-0 border-b border-brand/20 bg-mathspot-bg/80 backdrop-blur-md z-40">
-          <div className="px-4 py-2.5 flex items-center justify-between gap-4">
-            <nav className="flex items-center gap-5 text-sm font-medium overflow-x-auto">
-              {NAV.map((n) => (
-                <Link key={n.to} to={n.to} activeOptions={{ exact: true }} className="text-muted-foreground hover:text-brand transition-colors whitespace-nowrap [&.active]:text-brand">{n.label}</Link>
-              ))}
-            </nav>
-          </div>
-        </header>
         <main className={`flex-1 min-h-0 overflow-auto ${isHome ? "" : "p-6"}`}>
           {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
           <Outlet />
