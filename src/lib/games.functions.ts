@@ -47,7 +47,7 @@ export const submitGame = createServerFn({ method: "POST" })
       category,
       description: data.description,
       kind: data.kind,
-      game_url: data.kind === "url" ? data.gameUrl : null,
+      game_url: data.kind === "url" ? (data.gameUrl ?? null) : null,
       file_path: data.kind === "file" ? data.filePath : null,
       file_name: data.kind === "file" ? (data.fileName ?? "game file") : null,
       status: "pending",
@@ -131,7 +131,7 @@ export const gameFileLink = createServerFn({ method: "GET" })
   .inputValidator((d) => z.object({ path: z.string().trim().max(400) }).parse(d))
   .handler(async ({ data, context }) => {
     if (!(await isAdmin(context))) throw new Error("Admins only.");
-    const { data: signed } = context.supabase.storage.from("game-files").createSignedUrl(data.path, 600);
+    const { data: signed } = await context.supabase.storage.from("game-files").createSignedUrl(data.path, 600);
     if (!signed?.signedUrl) throw new Error("That file is not available.");
     return { url: signed.signedUrl };
   });

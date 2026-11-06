@@ -36,7 +36,7 @@ const MIME: Record<string, string> = {
 };
 
 function extOf(path: string): string {
-  const clean = path.split("?")[0];
+  const clean = path.split("?")[0] ?? "";
   const dot = clean.lastIndexOf(".");
   return dot < 0 ? "" : clean.slice(dot).toLowerCase();
 }
@@ -70,7 +70,7 @@ function buildFromZip(buffer: ArrayBuffer): { html: string; urls: string[] } {
   let html = new TextDecoder().decode(files[entry]!);
   const resolve = (ref: string): string | null => {
     if (/^(https?:|data:|blob:|#|mailto:|javascript:)/i.test(ref)) return null;
-    const clean = ref.replace(/^\.\//, "").split("#")[0].split("?")[0];
+    const clean = (ref.replace(/^\.\//, "").split("#")[0] ?? "").split("?")[0] ?? "";
     if (!clean) return null;
     return byPath.get(clean) ?? byPath.get(clean.split("/").pop() ?? "") ?? null;
   };
