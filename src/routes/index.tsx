@@ -209,3 +209,16 @@ function Index() {
     </>
   </>);
 }
+export const Route = createFileRoute("/")({
+  head: () => ({
+    meta: [
+      { title: "MathSpot — The place where all math lives" },
+      { name: "description", content: "The place where all math lives is mathspot" },
+      { property: "og:title", content: "MathSpot — The place where all math lives" },
+      { property: "og:description", content: "The place where all math lives is mathspot" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
+  component: Index,
+});

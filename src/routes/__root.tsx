@@ -1,3 +1,7 @@
+{ title: "MathSpot" },
+{ name: "description", content: "The place where all math lives is mathspot" },
+{ property: "og:title", content: "MathSpot" },
+{ property: "og:description", content: "The place where all math lives is mathspot" },
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   Outlet,
