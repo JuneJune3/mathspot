@@ -21,7 +21,7 @@ const ENV_KEYS: Record<ProviderId, string> = {
 };
 
 /** How many live sessions each service may hold at once. */
-export const SLOT_CAPS: Record<ProviderId, number> = { hyperbrowser: 3, steel: 3, kernel: 3 };
+export const SLOT_CAPS: Record<ProviderId, number> = { hyperbrowser: 1, steel: 3, kernel: 3 };
 /** Guests get a smaller share of each service than signed-in members. */
 export const GUEST_CAPS: Record<ProviderId, number> = { hyperbrowser: 1, steel: 1, kernel: 1 };
 

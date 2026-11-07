@@ -1,68 +1,68 @@
-import React, { useState } from 'react';
+import { useEffect, useState, type FormEvent } from "react";
+
+// Makes share links that only ever point at this site. The address comes from
+// wherever the site is running, so links follow any future site address change.
+
+export function buildSiteLink(origin: string, path: string) {
+  const clean = path.trim().replace(/^https?:\/\/[^/]+/i, "").replace(/^\/+/, "");
+  return `${origin.replace(/\/$/, "")}/${clean}`;
+}
 
 export default function LinkGenerator() {
-  const [destinationUrl, setDestinationUrl] = useState('');
-  const [customAlias, setCustomAlias] = useState('');
-  const [generatedLink, setGeneratedLink] = useState('');
+  const [origin, setOrigin] = useState("");
+  const [path, setPath] = useState("");
+  const [shorten, setShorten] = useState(false);
+  const [link, setLink] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [copied, setCopied] = useState(false);
 
-  const handleGenerate = (e: React.FormEvent) => {
+  useEffect(() => setOrigin(window.location.origin), []);
+
+  const generate = async (e: FormEvent) => {
     e.preventDefault();
-    if (!destinationUrl) return;
+    const full = buildSiteLink(origin, path);
+    setCopied(false);
+    if (!shorten) { setLink(full); return; }
+    setBusy(true);
+    try {
+      const r = await fetch(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(full)}`);
+      const s = (await r.text()).trim();
+      setLink(r.ok && s.startsWith("http") ? s : full);
+    } catch {
+      setLink(full);
+    } finally {
+      setBusy(false);
+    }
+  };
 
-    // This points to your Cloudflare Worker redirection endpoint
-    const workerDomain = 'https://your-worker.workers.dev';
-    const slug = customAlias || Math.random().toString(36).substring(2, 8);
-    const finalLink = `${workerDomain}/${slug}`;
-
-    setGeneratedLink(finalLink);
-    // Optional: Here you would also send { slug, destinationUrl } to your Cloudflare Worker KV storage to save it!
+  const copy = async () => {
+    await navigator.clipboard.writeText(link);
+    setCopied(true);
   };
 
   return (
-    <div className="p-6 rounded-xl bg-[#090A0F] border border-[#E5E5E5]/30 shadow-lg shadow-[#E5E5E5]/10 text-white">
-      <h3 className="text-xl font-bold mb-4 text-[#E5E5E5]">Link Generator</h3>
-      
-      <form onSubmit={handleGenerate} className="space-y-4">
-        <div>
-          <label className="block text-sm text-gray-400 mb-1">Destination URL</label>
-          <input 
-            type="url" 
-            placeholder="https://example.com/resource" 
-            value={destinationUrl}
-            onChange={(e) => setDestinationUrl(e.target.value)}
-            className="w-full px-4 py-2 rounded-lg bg-black/50 border border-gray-800 focus:border-[#E5E5E5] focus:outline-none"
-            required
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm text-gray-400 mb-1">Custom Slug / Code (Optional)</label>
-          <input 
-            type="text" 
-            placeholder="my-cool-link" 
-            value={customAlias}
-            onChange={(e) => setCustomAlias(e.target.value)}
-            className="w-full px-4 py-2 rounded-lg bg-black/50 border border-gray-800 focus:border-[#E5E5E5] focus:outline-none"
-          />
-        </div>
-
-        <button 
-          type="submit"
-          className="w-full py-2 px-4 bg-[#E5E5E5] hover:bg-[#8035cb] text-black font-semibold rounded-lg transition-colors"
-        >
-          Generate Link
+    <div className="rounded-xl border border-site-import-card bg-site-import-background p-6 text-site-import-foreground">
+      <h3 className="m-0 mb-4 text-xl font-bold">Link Generator</h3>
+      <form onSubmit={generate} className="space-y-4">
+        <label className="block">
+          <span className="mb-1 block text-sm text-site-import-muted-foreground">Page (optional)</span>
+          <div className="flex items-center rounded-lg border border-site-import-card bg-site-import-border">
+            <span className="truncate pl-3 text-sm text-site-import-muted-foreground">{origin}/</span>
+            <input value={path} onChange={(e) => setPath(e.target.value)} placeholder="" className="flex-1 bg-transparent px-1 py-2 text-site-import-foreground outline-none" aria-label="Page" />
+          </div>
+        </label>
+        <label className="flex items-center gap-2 text-sm text-site-import-muted-foreground cursor-pointer">
+          <input type="checkbox" checked={shorten} onChange={(e) => setShorten(e.target.checked)} className="accent-current" />
+          Make it a TinyURL
+        </label>
+        <button type="submit" disabled={busy || !origin} className="w-full rounded-lg bg-site-import-foreground py-2 font-semibold text-site-import-background cursor-pointer disabled:opacity-50">
+          {busy ? "Making link…" : "Generate Link"}
         </button>
       </form>
-
-      {generatedLink && (
-        <div className="mt-6 p-4 rounded-lg bg-black/80 border border-[#E5E5E5]/50 flex items-center justify-between">
-          <span className="text-sm text-purple-300 truncate mr-2">{generatedLink}</span>
-          <button 
-            onClick={() => navigator.clipboard.writeText(generatedLink)}
-            className="px-3 py-1 bg-[#E5E5E5]/20 hover:bg-[#E5E5E5]/40 text-[#E5E5E5] text-xs font-semibold rounded border border-[#E5E5E5]/40"
-          >
-            Copy
-          </button>
+      {link && (
+        <div className="mt-6 flex items-center justify-between rounded-lg border border-site-import-card bg-site-import-border p-4">
+          <a href={link} target="_blank" rel="noreferrer" className="mr-2 truncate text-sm text-site-import-foreground underline">{link}</a>
+          <button onClick={copy} className="rounded border border-site-import-card px-3 py-1 text-xs font-semibold text-site-import-foreground cursor-pointer">{copied ? "Copied" : "Copy"}</button>
         </div>
       )}
     </div>
