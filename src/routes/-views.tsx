@@ -32,6 +32,9 @@ type Props = {
 };
 
 import { GAMES, CATEGORIES } from "@/lib/games";
+import UploadGameModal, { type Submission } from "@/components/UploadGameModal";
+import PlayableGame from "@/components/PlayableGame";
+import { submitGame, approvedGames, amAdmin, pendingSubmissions, reviewSubmission } from "@/lib/games.functions";
 
 const icon = (u: string) => `https://www.google.com/s2/favicons?sz=64&domain=${u.split("/")[0]}`;
 
@@ -53,9 +56,34 @@ function SignInNote() {
   return <Link to="/auth" className={primaryBtn + " inline-block no-underline"}>Sign in</Link>;
 }
 
+type Community = { title: string; category: string; game_url: string | null; file_path: string | null };
+type Pending = { id: string; title: string; category: string; kind: string; game_url: string | null; file_path: string | null; file_name: string | null };
+
 function Gaming({ go }: Props) {
   const [cat, setCat] = useState("All");
   const { ratings, rate } = useGameRatings();
+  const { user } = useAuth();
+  const send = useServerFn(submitGame);
+  const loadApproved = useServerFn(approvedGames);
+  const checkAdmin = useServerFn(amAdmin);
+  const loadPending = useServerFn(pendingSubmissions);
+  const review = useServerFn(reviewSubmission);
+  const [uploadOpen, setUploadOpen] = useState(false);
+  const [community, setCommunity] = useState<Community[]>([]);
+  const [playing, setPlaying] = useState<Community | null>(null);
+  const [admin, setAdmin] = useState(false);
+  const [pending, setPending] = useState<Pending[]>([]);
+  const refresh = () => {
+    loadApproved().then((r) => setCommunity(r.rows as Community[])).catch(() => {});
+    if (user) checkAdmin().then((r) => {
+      setAdmin(r.admin);
+      if (r.admin) loadPending().then((p) => setPending(p.rows as Pending[])).catch(() => {});
+    }).catch(() => {});
+  };
+  useEffect(refresh, [user?.id]);
+  const onSubmit = async (sub: Submission) => { await send({ data: sub }); refresh(); };
+  const decide = async (id: string, decision: "approved" | "declined") => { await review({ data: { id, decision, note: "" } }); refresh(); };
+  const openCommunity = (g: Community) => (g.file_path ? setPlaying(g) : g.game_url && go(g.game_url));
   const list = cat === "All" ? GAMES : GAMES.filter((g) => g.category === cat);
   return (
     <div className="mx-auto max-w-5xl w-full py-14 px-6">
@@ -69,6 +97,47 @@ function Gaming({ go }: Props) {
           <button key={c} onClick={() => setCat(c)} aria-pressed={cat === c} className={`rounded-full px-3.5 py-1.5 text-[12px] cursor-pointer border ${cat === c ? "bg-site-import-primary text-site-import-foreground border-site-import-primary" : "bg-site-import-border text-site-import-muted-foreground border-site-import-card"}`}>{c}</button>
         ))}
       </div>
+      <div className="flex justify-center mb-8">
+        {user ? <Button onClick={() => setUploadOpen(true)}>Upload Game</Button> : <Link to="/auth" className="text-[13px] text-site-import-muted-foreground underline">Sign in to upload a game</Link>}
+      </div>
+      <UploadGameModal isOpen={uploadOpen} onClose={() => setUploadOpen(false)} onSubmit={onSubmit} />
+      {playing?.file_path && (
+        <div className="fixed inset-0 z-50 flex flex-col bg-site-import-background" role="dialog" aria-label={playing.title}>
+          <div className="flex items-center justify-between border-b border-site-import-card px-4 py-2">
+            <span className="text-site-import-foreground text-[14px]">{playing.title}</span>
+            <Button variant="ghost" size="sm" onClick={() => setPlaying(null)}>Close</Button>
+          </div>
+          <PlayableGame path={playing.file_path} name={playing.file_path} className="flex-1 w-full" />
+        </div>
+      )}
+      {admin && pending.length > 0 && (
+        <div className={`${card} mb-8 p-4`}>
+          <h2 className="m-0 mb-3 text-[15px] text-site-import-foreground">Waiting for your review ({pending.length})</h2>
+          {pending.map((p) => (
+            <div key={p.id} className="flex flex-wrap items-center gap-2 border-t border-site-import-card py-2 text-[13px]">
+              <span className="flex-1 text-site-import-foreground">{p.title} <span className="text-site-import-muted-foreground">· {p.category} · {p.kind === "file" ? p.file_name : p.game_url}</span></span>
+              {p.file_path && <Button size="sm" variant="ghost" onClick={() => setPlaying({ title: p.title, category: p.category, game_url: null, file_path: p.file_path })}>Try it</Button>}
+              {p.game_url && <Button size="sm" variant="ghost" onClick={() => go(p.game_url!)}>Try it</Button>}
+              <Button size="sm" onClick={() => decide(p.id, "approved")}>Approve</Button>
+              <Button size="sm" variant="ghost" onClick={() => decide(p.id, "declined")}>Decline</Button>
+            </div>
+          ))}
+        </div>
+      )}
+      {community.length > 0 && (
+        <>
+          <h2 className="m-0 mb-3 text-[13px] uppercase tracking-[0.16em] text-site-import-muted-foreground">Community games</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5 mb-10">
+            {community.map((g) => (
+              <div key={g.title + (g.file_path ?? g.game_url)} className={`${card} flex flex-col items-center gap-2 py-4 px-2`}>
+                <span className="text-site-import-foreground text-[12px] font-medium w-full text-center line-clamp-2 min-h-[2.4em]">{g.title}</span>
+                <span className="text-site-import-muted-foreground text-[10px] tracking-[0.1em] uppercase">{g.category}</span>
+                <Button onClick={() => openCommunity(g)} size="sm">Play</Button>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5">
         {list.map((g) => (
           <div key={g.name} className={`${card} anim-card flex flex-col items-center gap-2 py-4 px-2`}>
