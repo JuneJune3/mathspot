@@ -1,7 +1,3 @@
-{ title: "MathSpot" },
-{ name: "description", content: "The place where all math lives is mathspot" },
-{ property: "og:title", content: "MathSpot" },
-{ property: "og:description", content: "The place where all math lives is mathspot" },
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   Outlet,
@@ -86,9 +82,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "MathSpot" },
-      { name: "description", content: "Mathspot is the plsce where all math live" },
-            { property: "og:title", content: "MathSpot" },
-      { property: "og:description", content: "Mathspot is the plsce where all math live" },
+      { name: "description", content: "The place where all math lives is mathspot" },
+      { property: "og:title", content: "MathSpot" },
+      { property: "og:description", content: "The place where all math lives is mathspot" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -120,24 +116,13 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
-
 function RootComponent() {
-  const { queryClient } = Route.useRouteContext();
+  const queryClient = new QueryClient();
   useStealth();
   useCloudSync();
-  const isHome = useLocation({ select: (l) => l.pathname === "/" });
-  useEffect(() => {
-    try { document.documentElement.classList.toggle("low-perf", localStorage.getItem("low_perf") === "true"); } catch { /* storage blocked */ }
-  }, []);
-
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="h-dvh bg-mathspot-bg text-site-import-foreground relative flex flex-col overflow-hidden">
-        <main className={`flex-1 min-h-0 overflow-auto ${isHome ? "" : "p-6"}`}>
-          {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-          <Outlet />
-        </main>
-      </div>
+      <Outlet />
     </QueryClientProvider>
   );
 }
