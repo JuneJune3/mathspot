@@ -127,6 +127,30 @@ export type Database = {
         }
         Relationships: []
       }
+      contact_messages: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          name: string
+          sender_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          name?: string
+          sender_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          name?: string
+          sender_id?: string | null
+        }
+        Relationships: []
+      }
       game_submissions: {
         Row: {
           category: string
