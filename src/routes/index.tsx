@@ -1,10 +1,10 @@
-import { useCallback, useRef, useState, type CSSProperties, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type CSSProperties, type FormEvent } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { closeSite, openSite } from "@/lib/hyperbrowser.functions";
 import { useIdle, usePrefs, usePrefsEffects } from "@/lib/prefs";
 import { ExtraView, type Live, type View } from "@/routes/-views";
 import { createFileRoute } from "@tanstack/react-router";
-import LinkGenerator from "@/components/LinkGenerator";
+import { ContactInbox, ContactModal } from "@/components/Contact";
 import MusicPill from "@/components/MusicPill";
 import MusicHub from "@/components/MusicHub";
 import SlotBadges from "@/components/SlotBadges";
@@ -29,6 +29,13 @@ function Index() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [musicOpen, setMusicOpen] = useState(false);
   const [pillOpen, setPillOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
+  const [contactOpen, setContactOpen] = useState(false);
+  const searchRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    const k = (e: KeyboardEvent) => { if (e.key === "/" && !(e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement)) { e.preventDefault(); searchRef.current?.focus(); } };
+    window.addEventListener("keydown", k); return () => window.removeEventListener("keydown", k);
+  }, []);
   const [view, setView] = useState<View>("home");
   const [live, setLive] = useState<Live | null>(null);
   const [loading, setLoading] = useState(false);
@@ -85,91 +92,70 @@ function Index() {
     }
   };
 
+  const NavBtn = ({ label, active, onClick, icon }: { label: string; active: boolean; onClick: () => void; icon: React.ReactNode }) => (
+    <button onClick={onClick} aria-pressed={active} title={label} className={(active ? "bg-site-import-border text-site-import-foreground " : "text-site-import-muted-foreground ") + "flex items-center gap-3 h-11 rounded-xl px-3 w-full text-[15px] cursor-pointer transition-colors hover:bg-site-import-border hover:text-site-import-foreground"}>
+      <span className="shrink-0 h-[18px] w-[18px] grid place-items-center">{icon}</span>
+      {!collapsed && <span>{label}</span>}
+    </button>
+  );
+  const ic = { fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round" as const, strokeLinejoin: "round" as const, viewBox: "0 0 24 24", className: "h-[18px] w-[18px]" };
+  const I = {
+    home: <svg {...ic}><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8" /><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /></svg>,
+    chat: <svg {...ic}><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>,
+    games: <svg {...ic}><rect x="2" y="7" width="20" height="10" rx="5" /><line x1="7" y1="12" x2="9" y2="12" /><line x1="15" y1="12" x2="15.01" y2="12" /></svg>,
+    music: <svg {...ic}><path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" /></svg>,
+    user: <svg {...ic}><circle cx="12" cy="8" r="4" /><path d="M20 21a8 8 0 0 0-16 0" /></svg>,
+    gear: <svg {...ic}><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" /></svg>,
+    search: <svg {...ic}><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>,
+  };
+  const openMusic = () => { setMusicOpen(true); setPillOpen(false); };
+
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: capturedCSS }} />
-      <div className="bg-site-import-background! text-site-import-foreground selection:bg-none! selection:[background-position:0%_0%]! selection:[background-size:auto_auto]! selection:[background-repeat:repeat]! selection:[background-origin:padding-box]! selection:[background-clip:border-box]! selection:[background-attachment:scroll]! selection:bg-[#ffffff33]!" data-site-import-document-lang="en">
-        <div className="h-full" id="root">
-          <div className="bg-site-import-background flex h-full overflow-hidden w-full">
-            <aside className="bg-[hsl(240_14%_3%)] items-center border-site-import-border! border-r! flex flex-col shrink-0 gap-2 w-14 bg-site-import-background py-3 px-0 md:w-[76px] md:py-4 md:px-0">
-              <button onClick={() => setView("home")} aria-pressed={view === "home"} className={(view === "home" ? "bg-site-import-border" : "bg-transparent") + " bg-none rounded-[13px] text-site-import-muted-foreground cursor-pointer grid text-[100%] h-10 m-0 p-0 place-items-center normal-case duration-150 transition-colors ease-[cubic-bezier(0.4,0,0.2,1)] w-10 hover:bg-site-import-border hover:text-site-import-foreground"} title="Home">
-                <svg className="block h-[18px] align-middle w-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8" />
-                  <path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                </svg>
-              </button>
-              <button onClick={() => setView("gaming")} aria-pressed={view === "gaming"} className={(view === "gaming" ? "bg-site-import-border" : "bg-transparent") + " bg-none rounded-[13px] text-site-import-muted-foreground cursor-pointer grid text-[100%] h-10 m-0 p-0 place-items-center normal-case duration-150 transition-colors ease-[cubic-bezier(0.4,0,0.2,1)] w-10 hover:bg-site-import-border hover:text-site-import-foreground"} title="Gaming">
-                <svg className="block h-[18px] align-middle w-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="6" x2="10" y1="11" y2="11" />
-                  <line x1="8" x2="8" y1="9" y2="13" />
-                  <line x1="15" x2="15.01" y1="12" y2="12" />
-                  <line x1="18" x2="18.01" y1="10" y2="10" />
-                  <path d="M17.32 5H6.68a4 4 0 0 0-3.978 3.59c-.006.052-.01.101-.017.152C2.604 9.416 2 14.456 2 16a3 3 0 0 0 3 3c1 0 1.5-.5 2-1l1.414-1.414A2 2 0 0 1 9.828 16h4.344a2 2 0 0 1 1.414.586L17 18c.5.5 1 1 2 1a3 3 0 0 0 3-3c0-1.545-.604-6.584-.685-7.258-.007-.05-.011-.1-.017-.151A4 4 0 0 0 17.32 5z" />
-                </svg>
-              </button>
-              <button onClick={() => setView("chat")} aria-pressed={view === "chat"} className={(view === "chat" ? "bg-site-import-border" : "bg-transparent") + " bg-none rounded-[13px] text-site-import-muted-foreground cursor-pointer grid text-[100%] h-10 m-0 p-0 place-items-center normal-case duration-150 transition-colors ease-[cubic-bezier(0.4,0,0.2,1)] w-10 hover:bg-site-import-border hover:text-site-import-foreground"} title="Chat">
-                <svg className="block h-[18px] align-middle w-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" />
-                </svg>
-              </button>
-              <div className="flex-1" />
-              <button onClick={() => { setMusicOpen(true); setPillOpen(false); }} aria-pressed={musicOpen} className={(musicOpen ? "bg-site-import-border" : "bg-transparent") + " rounded-[13px] text-site-import-muted-foreground cursor-pointer grid h-10 w-10 place-items-center transition-colors hover:bg-site-import-border hover:text-site-import-foreground"} title="Music">
-                <svg className="block h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" /></svg>
-              </button>
-              <button onClick={() => setSettingsOpen(true)} aria-pressed={settingsOpen} className={(view === "settings" ? "bg-site-import-border" : "bg-transparent") + " bg-none rounded-[13px] text-site-import-muted-foreground cursor-pointer grid text-[100%] h-10 m-0 p-0 place-items-center normal-case duration-150 transition-colors ease-[cubic-bezier(0.4,0,0.2,1)] w-10 hover:bg-site-import-border hover:text-site-import-foreground"} title="Settings">
-                <svg className="block h-[18px] align-middle w-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
-                  <circle cx="12" cy="12" r="3" />
-                </svg>
-              </button>
-              <button onClick={() => setView("profile")} aria-pressed={view === "profile"} className={(view === "profile" ? "bg-site-import-border" : "bg-transparent") + " bg-none rounded-[13px] text-site-import-muted-foreground cursor-pointer grid text-[100%] h-10 m-0 p-0 place-items-center normal-case duration-150 transition-colors ease-[cubic-bezier(0.4,0,0.2,1)] w-10 hover:bg-site-import-border hover:text-site-import-foreground"} title="Profile">
-                <svg className="block h-[18px] align-middle w-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="8" r="5" />
-                  <path d="M20 21a8 8 0 0 0-16 0" />
-                </svg>
-              </button>
-            </aside>
-            {musicOpen && <MusicHub onMinimize={() => { setMusicOpen(false); setPillOpen(true); }} />}
-            {pillOpen && !musicOpen && <MusicPill onExpand={() => { setMusicOpen(true); setPillOpen(false); }} onClose={() => setPillOpen(false)} />}
-            <SettingsModal isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} onMore={() => { setSettingsOpen(false); setView("settings"); }} />
-            <div className="flex flex-1 flex-col min-w-0">
-              <div className={(view === "home" ? "hidden " : "flex ") + "bg-[hsl(240_12%_4.5%)] items-center border-b! border-site-import-border! shrink-0 gap-1.5 h-11 pl-3 pr-3 bg-site-import-background"}>
-                <div className="no-scrollbar items-center flex flex-1 gap-1.5 overflow-x-auto [scrollbar-width:none]">
-                  <button className="group shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] items-center bg-site-import-border bg-none rounded-[.75rem] text-site-import-foreground cursor-pointer flex text-[13px] gap-2 h-8 m-0 max-w-[210px] min-w-[120px] p-0 pl-2.5! pr-2.5! relative text-left">
-                    <span className="bg-[#ffffff40] rounded-[9999px] shrink-0 h-2 w-2" />
-                    <span className="overflow-hidden text-ellipsis whitespace-nowrap">New tab</span>
+      <div className="bg-[#000]! text-site-import-foreground h-screen flex overflow-hidden" data-site-import-document-lang="en">
+        <aside className={(collapsed ? "w-[68px] " : "w-[240px] ") + "shrink-0 flex flex-col gap-1 p-2 border-r border-site-import-border bg-[#050507]"}>
+          <NavBtn label="Home" active={view === "home"} onClick={() => setView("home")} icon={I.home} />
+          <NavBtn label="Chat" active={view === "chat"} onClick={() => setView("chat")} icon={I.chat} />
+          <NavBtn label="Games" active={view === "gaming"} onClick={() => setView("gaming")} icon={I.games} />
+          <NavBtn label="Music" active={musicOpen} onClick={openMusic} icon={I.music} />
+          <div className="flex-1" />
+          <NavBtn label="Account" active={view === "profile"} onClick={() => setView("profile")} icon={I.user} />
+          <NavBtn label="Settings" active={settingsOpen} onClick={() => setSettingsOpen(true)} icon={I.gear} />
+          <NavBtn label={collapsed ? "Expand" : "Collapse"} active={false} onClick={() => setCollapsed((c) => !c)} icon={<span className="text-lg leading-none">{collapsed ? "›" : "‹"}</span>} />
+        </aside>
+        {musicOpen && <MusicHub onMinimize={() => { setMusicOpen(false); setPillOpen(true); }} />}
+        {pillOpen && !musicOpen && <MusicPill onExpand={openMusic} onClose={() => setPillOpen(false)} />}
+        <SettingsModal isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} onMore={() => { setSettingsOpen(false); setView("settings"); }} />
+        {contactOpen && <ContactModal onClose={() => setContactOpen(false)} />}
+        <main className="relative flex flex-1 flex-col min-w-0 overflow-y-auto">
+          {view === "profile" && <ContactInbox />}
+          {view !== "home" && <ExtraView view={view} live={live} loading={loading} notice={notice} error={error} address={address} setAddress={setAddress} onStart={start} onEnd={end} go={(u) => { setAddress(u); void start(); }} />}
+          {view === "home" && (
+            <div className="flex flex-1 flex-col items-center justify-center p-6 text-center">
+              <div className="absolute top-4 right-5"><SlotBadges /></div>
+              <h1 className="m-0 mb-12 text-6xl md:text-8xl font-black tracking-tight text-white [text-shadow:0_0_30px_rgba(255,255,255,0.45)]">mathspot</h1>
+              <form onSubmit={start} className="w-full max-w-[850px] flex items-center gap-3 rounded-full border border-site-import-border bg-[#0b0b10] px-6 h-[70px] shadow-[0_0_24px_rgba(255,255,255,0.18)]">
+                <span className="text-site-import-muted-foreground">{I.search}</span>
+                <input ref={searchRef} type="text" value={address} onChange={(e) => setAddress(e.target.value)} placeholder={loading ? "Connecting…" : "Search games, songs, or chats..."} className="flex-1 bg-transparent border-none text-lg text-site-import-foreground outline-none" />
+                <kbd className="text-xs text-site-import-muted-foreground border border-site-import-border rounded px-1.5">/</kbd>
+              </form>
+              {error && <p role="alert" className="text-destructive text-sm mt-3">{error}</p>}
+              <div className="flex gap-10 mt-12">
+                {([["Games", I.games, () => setView("gaming")], ["Music", I.music, openMusic], ["Chat", I.chat, () => setView("chat")]] as const).map(([l, icon, fn]) => (
+                  <button key={l} onClick={fn} className="flex flex-col items-center gap-2 text-site-import-muted-foreground hover:text-site-import-foreground cursor-pointer">
+                    <span className="grid place-items-center h-[74px] w-[74px] rounded-full border border-site-import-border bg-[#0b0b10]">{icon}</span>
+                    <span className="text-sm">{l}</span>
                   </button>
-                </div>
+                ))}
               </div>
-
-              <div className="flex flex-1 flex-col overflow-y-auto">
-                {view !== "home" && <ExtraView view={view} live={live} loading={loading} notice={notice} error={error} address={address} setAddress={setAddress} onStart={start} onEnd={end} go={(u) => { setAddress(u); void start(); }} />}
-                {view === "home" && (
-                  <div className="flex flex-1 flex-col items-center justify-center p-6 text-center">
-                    <SlotBadges />
-                    <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-3">MathSpot</h1>
-                    <p className="text-muted-foreground text-sm max-w-md mb-8">The place where all math lives is mathspot</p>
-
-                    <form onSubmit={start} className="w-full max-w-xl flex items-center gap-2 rounded-full border border-site-import-border bg-site-import-card/60 px-4 py-2 mb-6">
-                      <input
-                        type="text"
-                        value={address}
-                        onChange={(e) => setAddress(e.target.value)}
-                        placeholder="Search the web or type a URL..."
-                        className="flex-1 bg-transparent border-none text-sm text-site-import-foreground focus:outline-none"
-                      />
-                      <button type="submit" disabled={loading} className="rounded-full bg-site-import-primary text-site-import-foreground px-4 py-1.5 text-xs font-medium cursor-pointer">
-                        {loading ? "Connecting..." : "Go"}
-                      </button>
-                    </form>
-
-                    <LinkGenerator />
-                  </div>
-                )}
+              <div className="absolute bottom-4 right-5 flex gap-2">
+                <span className="rounded-lg border border-site-import-border px-3 py-1.5 text-sm text-site-import-muted-foreground">ESC · Panic</span>
+                <button onClick={() => setContactOpen(true)} className="rounded-lg border border-site-import-border px-3 py-1.5 text-sm text-site-import-muted-foreground hover:text-site-import-foreground cursor-pointer">Contact</button>
               </div>
             </div>
-          </div>
-        </div>
+          )}
+        </main>
       </div>
     </>
   );
