@@ -1,3 +1,8 @@
+useEffect(() => {
+  if (typeof window !== "undefined" && localStorage.getItem("low_perf") === "true") {
+    document.documentElement.classList.add("low-perf");
+  }
+}, []);
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   Outlet,

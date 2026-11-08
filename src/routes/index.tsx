@@ -68,8 +68,12 @@ function Index() {
     setError("");
     setNotice("");
     try {
-      const res = await open({ data: { url: address.trim(), provider: prefs.cloudProvider } });
-      setLive(res);
+     // Change this line:
+const res = await open({ data: { url: address.trim(), provider: prefs.cloudProvider } });
+
+// To this:
+const res = await open({ data: { query: address.trim(), provider: prefs.cloudProvider } });
+
       setView("browse");
     } catch (err: any) {
       setError(err?.message || "Failed to start cloud browser.");
