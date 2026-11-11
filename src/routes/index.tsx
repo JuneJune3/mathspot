@@ -68,10 +68,6 @@ function Index() {
     setError("");
     setNotice("");
     try {
-     // Change this line:
-const res = await open({ data: { url: address.trim(), provider: prefs.cloudProvider } });
-
-// To this:
 const res = await open({ data: { query: address.trim(), provider: prefs.cloudProvider } });
 
       setView("browse");
