@@ -2,7 +2,6 @@ import { useEffect, useState, type FormEvent } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
-/** Visitor-facing contact form. Messages land in the owner's private inbox. */
 export function ContactModal({ onClose }: { onClose: () => void }) {
   const { user } = useAuth();
   const [name, setName] = useState("");
@@ -42,7 +41,6 @@ export function ContactModal({ onClose }: { onClose: () => void }) {
 
 type Row = { id: string; name: string; message: string; created_at: string };
 
-/** Owner-only inbox. Renders nothing for anyone who isn't an admin. */
 export function ContactInbox() {
   const { user } = useAuth();
   const [admin, setAdmin] = useState(false);
