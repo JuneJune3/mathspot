@@ -59,17 +59,18 @@ function Index() {
       setNotice("Could not close the browser. It will retry after the next idle period.");
     } finally { closing.current = false; }
   }, [close, live, loading]);
-  useIdle(stopIdle, live ? prefs.idleTimeoutMs : null);
+  useIdle(prefs.idleMinutes, Boolean(live), stopIdle);
 
-  const start = async (e?: FormEvent) => {
+  const start = async (e?: FormEvent, override?: string) => {
     e?.preventDefault();
-    if (!address.trim() || loading) return;
+    const target = (override ?? address).trim();
+    if (!target || loading) return;
     setLoading(true);
     setError("");
     setNotice("");
     try {
-const res = await open({ data: { query: address.trim(), provider: prefs.cloudProvider } });
-
+      const res = await open({ data: { query: target, provider: prefs.provider } });
+      setLive(res);
       setView("browse");
     } catch (err: any) {
       setError(err?.message || "Failed to start cloud browser.");
@@ -130,7 +131,7 @@ const res = await open({ data: { query: address.trim(), provider: prefs.cloudPro
         {contactOpen && <ContactModal onClose={() => setContactOpen(false)} />}
         <main className="relative flex flex-1 flex-col min-w-0 overflow-y-auto">
           {view === "profile" && <ContactInbox />}
-          {view !== "home" && <ExtraView view={view} live={live} loading={loading} notice={notice} error={error} address={address} setAddress={setAddress} onStart={start} onEnd={end} go={(u) => { setAddress(u); void start(); }} />}
+          {view !== "home" && <ExtraView view={view} setView={setView} live={live} loading={loading} error={error} go={(u) => { setAddress(u); void start(undefined, u); }} />}
           {view === "home" && (
             <div className="flex flex-1 flex-col items-center justify-center p-6 text-center">
               <div className="absolute top-4 right-5"><SlotBadges /></div>

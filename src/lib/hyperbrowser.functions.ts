@@ -344,13 +344,21 @@ export const closeSite = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const p: ProviderId = data.provider ?? "hyperbrowser";
-    const { data: row } = await supabaseAdmin
-      .from("user_api_keys")
-      .select("api_key")
-      .eq("provider", p)
-      .maybeSingle();
-    const key = row?.api_key || providerFromEnv(p);
+
+    const userId = await callerId();
+    let key: string | undefined;
+    if (userId) {
+      const { data: row } = await supabaseAdmin
+        .from("user_api_keys")
+        .select("api_key")
+        .eq("user_id", userId)
+        .eq("provider", p)
+        .maybeSingle();
+      key = row?.api_key;
+    }
+    key = key || providerFromEnv(p);
     if (!key) return { ok: false };
+
     try {
       if (p === "steel") {
         await fetch(`https://api.steel.dev/v1/sessions/${encodeURIComponent(data.sessionId)}/release`, {
