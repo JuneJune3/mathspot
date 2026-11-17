@@ -1,72 +1,127 @@
-import React, { useState } from 'react';
-import { useServerFn } from '@tanstack/react-start';
-import { openSite } from '@/lib/hyperbrowser.functions';
-import { checkFrame } from '@/lib/frame-check.functions';
-import { KEYS, read } from '@/lib/stealth';
-import { usePrefs } from '@/lib/prefs';
-import { PROXY_SERVER } from './ProxyHub';
-import { Search, Globe, RefreshCw, ExternalLink, Shield } from 'lucide-react';
-
-const SCRAMJET_DEMO_URL = 'https://scramjet.mercurywork.shop';
+import React, { useEffect, useRef, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { closeSite, openSite, type Live } from "@/lib/hyperbrowser.functions";
+import { ScramjetBrowser } from "@/components/ScramjetBrowser";
+import { checkFrame } from "@/lib/frame-check.functions";
+import { KEYS, read } from "@/lib/stealth";
+import { usePrefs } from "@/lib/prefs";
+import { PROXY_SERVER } from "./ProxyHub";
+import { Search, Globe, RefreshCw, ExternalLink, Shield } from "lucide-react";
 
 interface ProxySearchProps {
   defaultUrl?: string;
 }
 
-export default function ProxySearch({ defaultUrl = 'https://www.crazygames.com' }: ProxySearchProps) {
+export default function ProxySearch({
+  defaultUrl = "https://www.crazygames.com",
+}: ProxySearchProps) {
   const [inputUrl, setInputUrl] = useState(defaultUrl);
   const [activeUrl, setActiveUrl] = useState(defaultUrl);
   const [isLoading, setIsLoading] = useState(false);
-  const [cloudError, setCloudError] = useState('');
-  const [tier, setTier] = useState<'Direct' | 'Proxy' | 'Cloud'>('Direct');
+  const [cloudError, setCloudError] = useState("");
+  const [tier, setTier] = useState<"Direct" | "Proxy" | "Cloud" | "Scramjet">("Direct");
   const prefs = usePrefs();
   const open = useServerFn(openSite);
+  const close = useServerFn(closeSite);
   const check = useServerFn(checkFrame);
+  const [scramjetLive, setScramjetLive] = useState<Live | null>(null);
+  const scramjetRef = useRef<Live | null>(null);
+  const closeRef = useRef(close);
+  closeRef.current = close;
+
+  useEffect(() => {
+    scramjetRef.current = scramjetLive;
+  }, [scramjetLive]);
+
+  useEffect(
+    () => () => {
+      const active = scramjetRef.current;
+      if (active) {
+        void closeRef
+          .current({ data: { sessionId: active.sessionId, provider: "scramjet" } })
+          .catch((error) => {
+            console.error("Could not close the Scramjet proxy session.", error);
+          });
+      }
+    },
+    [],
+  );
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputUrl.trim()) return;
+    const previous = scramjetRef.current;
+    if (previous) {
+      scramjetRef.current = null;
+      void close({ data: { sessionId: previous.sessionId, provider: "scramjet" } }).catch(
+        (error) => {
+          console.error("Could not close the previous Scramjet proxy session.", error);
+        },
+      );
+    }
+    setScramjetLive(null);
 
     let target = inputUrl.trim();
 
     // Auto-prefix HTTP/HTTPS if missing
-    if (!target.startsWith('http://') && !target.startsWith('https://')) {
+    if (!target.startsWith("http://") && !target.startsWith("https://")) {
       // Check if it's a domain or search query
-      if (target.includes('.') && !target.includes(' ')) {
-        target = 'https://' + target;
+      if (target.includes(".") && !target.includes(" ")) {
+        target = "https://" + target;
       } else {
         target = `https://www.google.com/search?q=${encodeURIComponent(target)}`;
       }
     }
 
     setIsLoading(true);
-    setCloudError('');
+    setCloudError("");
     void route(target);
   };
 
   // Tier 1: direct frame → Tier 2: repository proxy → Tier 3: cloud browser relay.
   const route = async (target: string) => {
-    const forceCloud = read(KEYS.cloudKernel) === 'true';
+    const forceCloud = read(KEYS.cloudKernel) === "true";
     if (!forceCloud) {
       const direct = await check({ data: { url: target } }).catch(() => ({ frameable: false }));
-      if (direct.frameable) { setTier('Direct'); setActiveUrl(target); return; }
+      if (direct.frameable) {
+        setTier("Direct");
+        setActiveUrl(target);
+        return;
+      }
       const proxied = `${PROXY_SERVER}${encodeURIComponent(target)}`;
       const viaProxy = await check({ data: { url: proxied } }).catch(() => ({ frameable: false }));
-      if (viaProxy.frameable) { setTier('Proxy'); setActiveUrl(proxied); return; }
+      if (viaProxy.frameable) {
+        setTier("Proxy");
+        setActiveUrl(proxied);
+        return;
+      }
     }
     try {
       const live = await open({ data: { query: target, provider: prefs.provider } });
-      setTier('Cloud'); setActiveUrl(live.liveUrl);
+      if (live.provider === "scramjet") {
+        setTier("Scramjet");
+        setActiveUrl("");
+        setScramjetLive(live);
+      } else {
+        setTier("Cloud");
+        setActiveUrl(live.liveUrl);
+      }
     } catch (err) {
-      setCloudError(/unauthorized|authorization/i.test(String((err as Error)?.message)) ? 'This site blocks direct loading. Sign in to use the cloud browser.' : 'Every route failed. Try opening the site in a new tab.');
-      setTier('Direct'); setActiveUrl(target);
+      setCloudError(
+        (err as Error)?.message || "Every route failed. Try opening the site in a new tab.",
+      );
+      setTier("Direct");
+      setActiveUrl(target);
     }
   };
 
   return (
     <div className="flex flex-col h-full w-full bg-[#090A0F] text-white p-4 gap-4 rounded-xl border border-purple-900/30">
       {/* Top Search Controls Bar */}
-      <form onSubmit={handleSearch} className="flex items-center gap-3 bg-[#12131A] p-2 rounded-lg border border-purple-800/40 shadow-md">
+      <form
+        onSubmit={handleSearch}
+        className="flex items-center gap-3 bg-[#12131A] p-2 rounded-lg border border-purple-800/40 shadow-md"
+      >
         <div className="flex items-center gap-2 pl-2 text-purple-400">
           <Globe className="w-5 h-5" />
         </div>
@@ -95,7 +150,7 @@ export default function ProxySearch({ defaultUrl = 'https://www.crazygames.com' 
               onClick={() => {
                 setIsLoading(true);
                 const current = activeUrl;
-                setActiveUrl('');
+                setActiveUrl("");
                 setTimeout(() => setActiveUrl(current), 50);
               }}
               className="text-slate-400 hover:text-purple-400 transition"
@@ -119,10 +174,7 @@ export default function ProxySearch({ defaultUrl = 'https://www.crazygames.com' 
       <p className="text-[11px] text-muted-foreground m-0">Route: {tier}</p>
       {cloudError && (
         <p role="status" className="text-xs text-muted-foreground m-0">
-          {cloudError}{' '}
-          <a href={SCRAMJET_DEMO_URL} target="_blank" rel="noreferrer" className="underline">
-            Open Scramjet fallback (enter the URL there)
-          </a>
+          {cloudError}
         </p>
       )}
       {/* Embed Display Container */}
@@ -130,11 +182,29 @@ export default function ProxySearch({ defaultUrl = 'https://www.crazygames.com' 
         {isLoading && (
           <div className="absolute inset-0 bg-[#090A0F]/90 backdrop-blur-sm z-10 flex flex-col items-center justify-center gap-3">
             <div className="w-8 h-8 border-4 border-[#E5E5E5] border-t-transparent rounded-full animate-spin" />
-            <span className="text-xs text-slate-400 font-mono">Routing through secure stream...</span>
+            <span className="text-xs text-slate-400 font-mono">
+              Routing through secure stream...
+            </span>
           </div>
         )}
 
-        {activeUrl ? (
+        {scramjetLive?.scramjetToken ? (
+          <ScramjetBrowser
+            key={scramjetLive.sessionId}
+            url={scramjetLive.url}
+            sessionId={scramjetLive.sessionId}
+            token={scramjetLive.scramjetToken}
+            onLoad={() => setIsLoading(false)}
+            onError={(message) => {
+              setCloudError(message);
+              setIsLoading(false);
+            }}
+          />
+        ) : scramjetLive ? (
+          <p role="alert" className="grid h-full place-items-center text-center text-sm text-slate-300">
+            Scramjet could not start because its session token is missing.
+          </p>
+        ) : activeUrl ? (
           <iframe
             src={activeUrl}
             title="Proxy Window"
@@ -146,7 +216,9 @@ export default function ProxySearch({ defaultUrl = 'https://www.crazygames.com' 
         ) : (
           <div className="flex flex-col items-center justify-center h-full text-center p-6 text-slate-500 gap-2">
             <Shield className="w-10 h-10 text-purple-900/50" />
-            <p className="text-sm">Enter a search term or target URL above to initialize browsing.</p>
+            <p className="text-sm">
+              Enter a search term or target URL above to initialize browsing.
+            </p>
           </div>
         )}
       </div>

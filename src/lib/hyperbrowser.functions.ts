@@ -12,6 +12,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 // can show how many slots are free and refuse to start one when full.
 
 type ProviderId = "hyperbrowser" | "steel" | "kernel";
+type BrowserProvider = ProviderId | "scramjet";
 const PROVIDER_IDS: ProviderId[] = ["hyperbrowser", "steel", "kernel"];
 
 const ENV_KEYS: Record<ProviderId, string> = {
@@ -27,8 +28,15 @@ export const GUEST_CAPS: Record<ProviderId, number> = { hyperbrowser: 1, steel: 
 
 /** Sessions older than this are considered dead and free their slot. */
 const SESSION_TTL_MS = 30 * 60 * 1000;
+const SCRAMJET_SLOT_CAP = 20;
 
-export type Live = { sessionId: string; liveUrl: string; url: string; provider: ProviderId };
+export type Live = {
+  sessionId: string;
+  liveUrl: string;
+  url: string;
+  provider: BrowserProvider;
+  scramjetToken?: string;
+};
 export type Slots = Record<ProviderId, { cap: number; used: number; free: number; guests: number }>;
 
 function providerFromEnv(p: ProviderId): string | undefined {
@@ -60,7 +68,8 @@ async function readSlots(): Promise<Slots> {
   await supabaseAdmin.from("browser_sessions").delete().lt("last_seen_at", cutoff);
 
   const slots = {} as Slots;
-  for (const p of PROVIDER_IDS) slots[p] = { cap: SLOT_CAPS[p], used: 0, free: SLOT_CAPS[p], guests: 0 };
+  for (const p of PROVIDER_IDS)
+    slots[p] = { cap: SLOT_CAPS[p], used: 0, free: SLOT_CAPS[p], guests: 0 };
 
   const { data } = await supabaseAdmin.from("browser_sessions").select("provider, user_id");
   for (const row of data ?? []) {
@@ -75,7 +84,11 @@ async function readSlots(): Promise<Slots> {
 
 /** Which providers have a key, and how many of their slots are free. No secrets returned. */
 export const providerStatus = createServerFn({ method: "GET" }).handler(async () => {
-  const available: Record<ProviderId, boolean> = { hyperbrowser: false, steel: false, kernel: false };
+  const available: Record<ProviderId, boolean> = {
+    hyperbrowser: false,
+    steel: false,
+    kernel: false,
+  };
   for (const p of PROVIDER_IDS) available[p] = Boolean(providerFromEnv(p));
   const slots = await readSlots();
   return { available, slots };
@@ -96,7 +109,12 @@ export const saveProviderKey = createServerFn({ method: "POST" })
     const { error } = await context.supabase
       .from("user_api_keys")
       .upsert(
-        { user_id: context.userId, provider: data.provider, api_key: data.apiKey, updated_at: new Date().toISOString() },
+        {
+          user_id: context.userId,
+          provider: data.provider,
+          api_key: data.apiKey,
+          updated_at: new Date().toISOString(),
+        },
         { onConflict: "user_id,provider" },
       );
     if (error) throw new Error("Could not save the key. Please try again.");
@@ -106,9 +124,15 @@ export const saveProviderKey = createServerFn({ method: "POST" })
 /** Removes the signed-in user's saved key for a provider (falls back to the project key). */
 export const clearProviderKey = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ provider: z.enum(["hyperbrowser", "steel", "kernel"]) }).parse(d))
+  .inputValidator((d) =>
+    z.object({ provider: z.enum(["hyperbrowser", "steel", "kernel"]) }).parse(d),
+  )
   .handler(async ({ data, context }) => {
-    await context.supabase.from("user_api_keys").delete().eq("user_id", context.userId).eq("provider", data.provider);
+    await context.supabase
+      .from("user_api_keys")
+      .delete()
+      .eq("user_id", context.userId)
+      .eq("provider", data.provider);
     return { ok: true };
   });
 
@@ -116,10 +140,16 @@ export const clearProviderKey = createServerFn({ method: "POST" })
 export const providerKeyState = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { data, error } = await context.supabase.from("user_api_keys").select("provider, updated_at");
+    const { data, error } = await context.supabase
+      .from("user_api_keys")
+      .select("provider, updated_at");
     const own: Record<string, boolean> = { hyperbrowser: false, steel: false, kernel: false };
     if (!error) for (const row of data ?? []) own[row.provider] = true;
-    const available: Record<ProviderId, boolean> = { hyperbrowser: false, steel: false, kernel: false };
+    const available: Record<ProviderId, boolean> = {
+      hyperbrowser: false,
+      steel: false,
+      kernel: false,
+    };
     for (const p of PROVIDER_IDS) available[p] = Boolean(own[p] || providerFromEnv(p));
     return { own, available };
   });
@@ -137,8 +167,43 @@ function resolveOrder(
     return true;
   });
   const order =
-    requested && usable.includes(requested) ? [requested, ...usable.filter((p) => p !== requested)] : usable;
+    requested && usable.includes(requested)
+      ? [requested, ...usable.filter((p) => p !== requested)]
+      : usable;
   return order.map((p) => ({ provider: p, key: userKeys[p] ?? providerFromEnv(p)! }));
+}
+
+async function openScramjetFallback(url: string, userId: string | null): Promise<Live> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { randomUUID } = await import("node:crypto");
+  const { createScramjetToken } = await import("./scramjet-token.mjs");
+  const sessionId = randomUUID();
+  const expiresAt = Date.now() + SESSION_TTL_MS;
+  const scramjetToken = createScramjetToken(
+    sessionId,
+    expiresAt,
+    process.env["SCRAMJET_SESSION_SECRET"],
+  );
+  const { count, error: countError } = await supabaseAdmin
+    .from("browser_sessions")
+    .select("id", { count: "exact", head: true })
+    .eq("provider", "scramjet")
+    .gte("last_seen_at", new Date(Date.now() - SESSION_TTL_MS).toISOString());
+  if (countError) throw new Error("Could not check Scramjet proxy capacity.");
+  if ((count ?? 0) >= SCRAMJET_SLOT_CAP) {
+    throw new Error("The built-in Scramjet proxy is busy right now. Please try again shortly.");
+  }
+
+  const { error: saveError } = await supabaseAdmin.from("browser_sessions").insert({
+    provider: "scramjet",
+    session_id: sessionId,
+    user_id: userId,
+    url,
+    last_seen_at: new Date().toISOString(),
+  });
+  if (saveError) throw new Error("Could not start the built-in Scramjet proxy.");
+
+  return { sessionId, liveUrl: "", url, provider: "scramjet", scramjetToken };
 }
 
 export function toUrl(input: string): string {
@@ -191,7 +256,8 @@ async function createSteel(key: string, url: string): Promise<Live> {
   if (!base) throw new Error("Steel did not return a live view");
   const liveUrl = base + (base.includes("?") ? "&" : "?") + "interactive=true";
   const navigated = await steelNavigate(key, s.id, url).catch(() => false);
-  if (!navigated) console.error(`Steel navigation via CDP failed for ${url}; viewer controls still work`);
+  if (!navigated)
+    console.error(`Steel navigation via CDP failed for ${url}; viewer controls still work`);
   return { sessionId: s.id, liveUrl, url, provider: "steel" };
 }
 
@@ -219,7 +285,9 @@ async function steelNavigate(key: string, id: string, url: string): Promise<bool
       }
       resolve(ok);
     };
-    ws.addEventListener("open", () => ws.send(JSON.stringify({ id: 1, method: "Target.getTargets" })));
+    ws.addEventListener("open", () =>
+      ws.send(JSON.stringify({ id: 1, method: "Target.getTargets" })),
+    );
     ws.addEventListener("error", () => finish(false));
     ws.addEventListener("message", (ev) => {
       let m: {
@@ -237,7 +305,11 @@ async function steelNavigate(key: string, id: string, url: string): Promise<bool
         if (!page) return finish(false);
         stage = 1;
         ws.send(
-          JSON.stringify({ id: 2, method: "Target.attachToTarget", params: { targetId: page.targetId, flatten: true } }),
+          JSON.stringify({
+            id: 2,
+            method: "Target.attachToTarget",
+            params: { targetId: page.targetId, flatten: true },
+          }),
         );
       } else if (stage === 1 && m.id === 2) {
         sessionId = m.result?.sessionId ?? "";
@@ -286,24 +358,21 @@ export const openSite = createServerFn({ method: "POST" })
 
     const userKeys: Partial<Record<ProviderId, string>> = {};
     if (userId) {
-      const { data: rows } = await supabaseAdmin.from("user_api_keys").select("provider, api_key").eq("user_id", userId);
+      const { data: rows } = await supabaseAdmin
+        .from("user_api_keys")
+        .select("provider, api_key")
+        .eq("user_id", userId);
       for (const row of rows ?? []) {
-        if (PROVIDER_IDS.includes(row.provider as ProviderId)) userKeys[row.provider as ProviderId] = row.api_key;
+        if (PROVIDER_IDS.includes(row.provider as ProviderId))
+          userKeys[row.provider as ProviderId] = row.api_key;
       }
     }
 
     const slots = await readSlots();
     const candidates = resolveOrder(data.provider, userKeys, slots, !userId);
-    if (candidates.length === 0) {
-      const anyKey = PROVIDER_IDS.some((p) => userKeys[p] || providerFromEnv(p));
-      throw new Error(
-        anyKey
-          ? "Every browser slot is busy right now. Close a tab or try again in a moment."
-          : "No browser service is set up yet. Add an API key in Settings.",
-      );
-    }
-
     const url = toUrl(data.query);
+    if (candidates.length === 0) return openScramjetFallback(url, userId);
+
     const errors: string[] = [];
     for (const { provider, key } of candidates) {
       try {
@@ -313,29 +382,28 @@ export const openSite = createServerFn({ method: "POST" })
             : provider === "kernel"
               ? await createKernel(key, url)
               : await createHyper(key, url);
-        await supabaseAdmin
-          .from("browser_sessions")
-          .upsert(
-            {
-              provider,
-              session_id: live.sessionId,
-              user_id: userId,
-              url: live.url,
-              last_seen_at: new Date().toISOString(),
-            },
-            { onConflict: "provider,session_id" },
-          );
+        await supabaseAdmin.from("browser_sessions").upsert(
+          {
+            provider,
+            session_id: live.sessionId,
+            user_id: userId,
+            url: live.url,
+            last_seen_at: new Date().toISOString(),
+          },
+          { onConflict: "provider,session_id" },
+        );
         return live;
       } catch (e) {
         errors.push(`${provider}: ${e instanceof Error ? e.message : "unknown error"}`);
       }
     }
-    throw new Error(`Could not start a browser session. ${errors.join(" | ")}`);
+    console.warn("Cloud browser providers failed; using the Scramjet fallback.", errors);
+    return openScramjetFallback(url, userId);
   });
 
 const closeInput = z.object({
   sessionId: z.string().max(200),
-  provider: z.enum(["hyperbrowser", "steel", "kernel"]).optional(),
+  provider: z.enum(["hyperbrowser", "steel", "kernel", "scramjet"]).optional(),
 });
 
 /** Stops the session on its provider so idle windows stop consuming credits. */
@@ -343,9 +411,21 @@ export const closeSite = createServerFn({ method: "POST" })
   .inputValidator((d) => closeInput.parse(d))
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const p: ProviderId = data.provider ?? "hyperbrowser";
+    const p: BrowserProvider = data.provider ?? "hyperbrowser";
 
     const userId = await callerId();
+    if (p === "scramjet") {
+      const { revokeScramjetSession } = await import("./scramjet-token.mjs");
+      revokeScramjetSession(data.sessionId);
+      const { error } = await supabaseAdmin
+        .from("browser_sessions")
+        .delete()
+        .eq("provider", "scramjet")
+        .eq("session_id", data.sessionId);
+      if (error) throw new Error("Could not close the Scramjet proxy session.");
+      return { ok: true };
+    }
+
     let key: string | undefined;
     if (userId) {
       const { data: row } = await supabaseAdmin
@@ -361,20 +441,26 @@ export const closeSite = createServerFn({ method: "POST" })
 
     try {
       if (p === "steel") {
-        await fetch(`https://api.steel.dev/v1/sessions/${encodeURIComponent(data.sessionId)}/release`, {
-          method: "POST",
-          headers: { "steel-api-key": key },
-        });
+        await fetch(
+          `https://api.steel.dev/v1/sessions/${encodeURIComponent(data.sessionId)}/release`,
+          {
+            method: "POST",
+            headers: { "steel-api-key": key },
+          },
+        );
       } else if (p === "kernel") {
         await fetch(`https://api.onkernel.com/browsers/${encodeURIComponent(data.sessionId)}`, {
           method: "DELETE",
           headers: { Authorization: `Bearer ${key}` },
         });
       } else {
-        await fetch(`https://api.hyperbrowser.ai/api/session/${encodeURIComponent(data.sessionId)}/stop`, {
-          method: "PUT",
-          headers: { "x-api-key": key },
-        });
+        await fetch(
+          `https://api.hyperbrowser.ai/api/session/${encodeURIComponent(data.sessionId)}/stop`,
+          {
+            method: "PUT",
+            headers: { "x-api-key": key },
+          },
+        );
       }
     } catch {
       return { ok: false };
@@ -390,7 +476,11 @@ export const closeSite = createServerFn({ method: "POST" })
 /** Live slot counts for every service, safe to show to guests. */
 export const slotStatus = createServerFn({ method: "GET" }).handler(async () => {
   const slots = await readSlots();
-  const available: Record<ProviderId, boolean> = { hyperbrowser: false, steel: false, kernel: false };
+  const available: Record<ProviderId, boolean> = {
+    hyperbrowser: false,
+    steel: false,
+    kernel: false,
+  };
   for (const p of PROVIDER_IDS) available[p] = Boolean(providerFromEnv(p));
   return { slots, available };
 });

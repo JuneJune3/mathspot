@@ -77,7 +77,8 @@ export function ProviderKeysSettings() {
     <>
       <p className="text-site-import-muted-foreground text-[13px] m-0 mb-4">
         Choose a browsing service and enter its API key. Keys are stored server-side and never shown
-        again after saving.
+        again after saving. If no provider key is available or all provider slots are full, MathSpot
+        automatically uses its built-in Scramjet proxy.
       </p>
       <div className="grid grid-cols-3 gap-2 mb-5">
         {PROVIDERS.map((provider) => {
