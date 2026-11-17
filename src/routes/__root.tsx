@@ -1,21 +1,15 @@
-useEffect(() => {
-  if (typeof window !== "undefined" && localStorage.getItem("low_perf") === "true") {
-    document.documentElement.classList.add("low-perf");
-  }
-}, []);
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   Outlet,
   Link,
-  useLocation,
   createRootRouteWithContext,
   useRouter,
   HeadContent,
   Scripts,
   type ErrorComponentProps,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
-import { useStealth } from "@/lib/stealth";
+import { useEffect, useState, type ReactNode } from "react";
+import { read, useStealth } from "@/lib/stealth";
 import { useCloudSync } from "@/lib/cloud-sync";
 
 import appCss from "../styles.css?url";
@@ -122,7 +116,10 @@ function RootShell({ children }: { children: ReactNode }) {
 }
 
 function RootComponent() {
-  const queryClient = new QueryClient();
+  const [queryClient] = useState(() => new QueryClient());
+  useEffect(() => {
+    document.documentElement.classList.toggle("low-perf", read("low_perf") === "true");
+  }, []);
   useStealth();
   useCloudSync();
   return (

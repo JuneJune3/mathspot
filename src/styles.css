@@ -184,12 +184,32 @@
 /* site-import tokens: end */
 
 @keyframes browser-loading {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
-.browser-loading { animation: browser-loading 1s linear infinite; }
-html[data-motion="none"] .browser-loading { animation: none; }
+.browser-loading {
+  animation: browser-loading 1s linear infinite;
+}
+html[data-motion="none"] .browser-loading {
+  animation: none;
+}
+html[data-motion="none"],
+html[data-motion="none"] *,
+html[data-motion="none"] *::before,
+html[data-motion="none"] *::after {
+  animation: none !important;
+  scroll-behavior: auto !important;
+  transition: none !important;
+}
 @media (prefers-reduced-motion: reduce) {
-  .browser-loading { animation: none; }
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    scroll-behavior: auto !important;
+    transition: none !important;
+  }
 }
 
 /* MathSpot glass theme */
@@ -217,15 +237,21 @@ html[data-motion="none"] .browser-loading { animation: none; }
   color: var(--site-import-foreground);
   font-size: 0.8rem;
   outline: none;
-  &:focus { border-color: var(--brand); }
+  &:focus {
+    border-color: var(--brand);
+  }
 }
 
 /* Low Performance Mode: strip animations, blur and shadows for low-end hardware. */
+html.low-perf,
+html.low-perf::before,
+html.low-perf::after,
 html.low-perf *,
 html.low-perf *::before,
 html.low-perf *::after {
   animation: none !important;
   transition: none !important;
+  scroll-behavior: auto !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
   box-shadow: none !important;
