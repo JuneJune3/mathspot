@@ -7,6 +7,8 @@ import { usePrefs } from '@/lib/prefs';
 import { PROXY_SERVER } from './ProxyHub';
 import { Search, Globe, RefreshCw, ExternalLink, Shield } from 'lucide-react';
 
+const SCRAMJET_DEMO_URL = 'https://scramjet.mercurywork.shop';
+
 interface ProxySearchProps {
   defaultUrl?: string;
 }
@@ -115,7 +117,14 @@ export default function ProxySearch({ defaultUrl = 'https://www.crazygames.com' 
       </form>
 
       <p className="text-[11px] text-muted-foreground m-0">Route: {tier}</p>
-      {cloudError && <p role="status" className="text-xs text-muted-foreground m-0">{cloudError}</p>}
+      {cloudError && (
+        <p role="status" className="text-xs text-muted-foreground m-0">
+          {cloudError}{' '}
+          <a href={SCRAMJET_DEMO_URL} target="_blank" rel="noreferrer" className="underline">
+            Open Scramjet fallback (enter the URL there)
+          </a>
+        </p>
+      )}
       {/* Embed Display Container */}
       <div className="relative flex-1 min-h-[600px] w-full bg-[#050508] rounded-lg border border-slate-800 overflow-hidden">
         {isLoading && (
