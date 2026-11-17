@@ -3,6 +3,7 @@ import { X } from "lucide-react";
 import { TabCloakSettings } from "./Webcloaking";
 import { PanicEscape } from "./PanicEscape";
 import { KEYS, read, write } from "@/lib/stealth";
+import { ProviderKeysSettings } from "./ProviderKeysSettings";
 
 export function SettingsModal({ isOpen, onClose, onMore }: { isOpen: boolean; onClose: () => void; onMore?: () => void }) {
   const [cloud, setCloud] = useState(false);
@@ -27,6 +28,10 @@ export function SettingsModal({ isOpen, onClose, onMore }: { isOpen: boolean; on
             <p className="text-xs text-muted-foreground m-0">Open proxy searches in a cloud browser instead of loading them directly. Uses the site's own browsing service.</p>
           </div>
           <input type="checkbox" checked={cloud} onChange={(e) => { setCloud(e.target.checked); write(KEYS.cloudKernel, String(e.target.checked)); }} className="w-4 h-4 accent-brand cursor-pointer" aria-label="Use cloud browser" />
+        </div>
+        <div className="glass-card p-4">
+          <h3 className="text-sm font-semibold mb-3">Browsing service API keys</h3>
+          <ProviderKeysSettings />
         </div>
         <div className="glass-card p-4 flex items-center justify-between gap-4">
           <div>

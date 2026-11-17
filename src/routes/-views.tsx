@@ -6,8 +6,8 @@ import { useGameRatings } from "@/lib/game-ratings";
 import { Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { usePrefs, setPrefs, PROVIDERS, MAX_ICON_BYTES, MAX_IDLE_MINUTES, type Motion } from "@/lib/prefs";
-import { providerStatus, providerKeyState, saveProviderKey, clearProviderKey } from "@/lib/hyperbrowser.functions";
+import { usePrefs, setPrefs, MAX_ICON_BYTES, MAX_IDLE_MINUTES, type Motion } from "@/lib/prefs";
+import { ProviderKeysSettings } from "@/components/ProviderKeysSettings";
 import l1 from "@/assets/logo1.asset.json";
 import l2 from "@/assets/logo2.asset.json";
 import l3 from "@/assets/logo3.asset.json";
@@ -295,22 +295,6 @@ function Settings() {
   const p = usePrefs();
   const { user, username } = useAuth();
   const [iconErr, setIconErr] = useState("");
-  const statusFn = useServerFn(providerStatus);
-  const keyStateFn = useServerFn(providerKeyState);
-  const saveFn = useServerFn(saveProviderKey);
-  const clearFn = useServerFn(clearProviderKey);
-  const [avail, setAvail] = useState<Record<string, boolean> | null>(null);
-  const [own, setOwn] = useState<Record<string, boolean>>({});
-  const [draft, setDraft] = useState<Record<string, string>>({});
-  const [show, setShow] = useState<Record<string, boolean>>({});
-  const [keyMsg, setKeyMsg] = useState("");
-
-  useEffect(() => {
-    let cancelled = false;
-    statusFn().then((s) => { if (!cancelled) setAvail(s.available); }).catch(() => { if (!cancelled) setAvail({ hyperbrowser: false, steel: false, kernel: false }); });
-    if (user) keyStateFn().then((s) => { if (!cancelled) { setOwn(s.own); setAvail(s.available); } }).catch(() => {});
-    return () => { cancelled = true; };
-  }, [user, statusFn, keyStateFn]);
 
   const upload = (e: ChangeEvent<HTMLInputElement>) => {
     setIconErr("");
@@ -324,32 +308,6 @@ function Settings() {
   };
   const opt = (on: boolean) => `rounded-[.75rem] border-2 cursor-pointer anim-press ${on ? "border-site-import-primary" : "border-site-import-card"}`;
 
-  const saveKey = async (id: string, name: string) => {
-    const value = (draft[id] ?? "").trim();
-    if (!user || value.length < 8) return;
-    setKeyMsg("");
-    try {
-      await saveFn({ data: { provider: id as "hyperbrowser" | "steel" | "kernel", apiKey: value } });
-      setOwn((o) => ({ ...o, [id]: true }));
-      setDraft((d) => ({ ...d, [id]: "" }));
-      setKeyMsg(`${name} key saved. New sessions will use it.`);
-    } catch {
-      setKeyMsg(`Could not save the ${name} key. Please try again.`);
-    }
-  };
-
-  const removeKey = async (id: string, name: string) => {
-    if (!user) return;
-    setKeyMsg("");
-    try {
-      await clearFn({ data: { provider: id as "hyperbrowser" | "steel" | "kernel" } });
-      setOwn((o) => ({ ...o, [id]: false }));
-      setKeyMsg(`${name} key removed. The project key is used again.`);
-    } catch {
-      setKeyMsg(`Could not remove the ${name} key.`);
-    }
-  };
-
   return (
     <div className="mx-auto max-w-2xl w-full py-14 px-6 anim-rise">
       <h1 className="font-heading text-site-import-foreground text-[30px] font-semibold mb-8">Settings</h1>
@@ -360,51 +318,7 @@ function Settings() {
       </div>
       <h2 className={label}>Browsing service</h2>
       <div className={`${card} p-5 mb-8`}>
-        <p className="text-site-import-muted-foreground text-[13px] m-0 mb-4">Pick which service opens sites and games. A service is gray until an API key is set up, and if one fails the next one with a key takes over automatically.</p>
-        <div className="grid grid-cols-3 gap-2 mb-5">
-          {PROVIDERS.map((prov) => {
-            const ok = Boolean(avail?.[prov.id]);
-            const selected = p.provider === prov.id;
-            return (
-              <button
-                key={prov.id}
-                disabled={!ok}
-                onClick={() => setPrefs({ provider: prov.id })}
-                aria-pressed={selected}
-                title={ok ? `Use ${prov.name}` : `${prov.name} has no API key yet`}
-                className={`rounded-[.75rem] py-2.5 text-[13px] anim-press border border-site-import-card ${!ok ? "opacity-40 cursor-not-allowed text-site-import-muted-foreground bg-site-import-border" : selected ? "brand-gradient text-site-import-foreground cursor-pointer" : "text-site-import-foreground hover:text-site-import-foreground bg-site-import-border cursor-pointer hover:bg-site-import-card"}`}
-              >
-                {prov.name}
-                <div className="text-[10px] tracking-[0.08em] uppercase opacity-70">{ok ? (own[prov.id] ? "Your key" : "Ready") : "No key"}</div>
-              </button>
-            );
-          })}
-        </div>
-        {PROVIDERS.map((prov) => (
-          <div key={prov.id} className="mb-4 last:mb-0">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-site-import-foreground text-[13px] font-medium">{prov.name} API key</span>
-              <span className="text-site-import-muted-foreground text-[11px]">{own[prov.id] ? "Your key is saved" : avail?.[prov.id] ? "Using the project key" : "Not set up yet"}</span>
-            </div>
-            <div className="flex gap-2">
-              <input
-                type={show[prov.id] ? "text" : "password"}
-                value={draft[prov.id] ?? ""}
-                onChange={(e) => setDraft((d) => ({ ...d, [prov.id]: e.target.value }))}
-                placeholder={own[prov.id] ? "Key saved — paste a new one to replace it" : `Paste your ${prov.name} key`}
-                aria-label={`${prov.name} API key`}
-                className={inputCls}
-                disabled={!user}
-                autoComplete="off"
-              />
-              <button type="button" onClick={() => setShow((s) => ({ ...s, [prov.id]: !s[prov.id] }))} className="border border-site-import-card rounded-[.75rem] px-3 text-[12px] text-site-import-muted-foreground cursor-pointer hover:text-site-import-foreground" aria-label={show[prov.id] ? `Hide ${prov.name} key` : `Show ${prov.name} key`}>{show[prov.id] ? "Hide" : "Show"}</button>
-              <button type="button" onClick={() => void saveKey(prov.id, prov.name)} disabled={!user || (draft[prov.id] ?? "").trim().length < 8} className={primaryBtn + " !px-4 !py-2 text-[13px] disabled:opacity-40"}>Save</button>
-              {own[prov.id] && <button type="button" onClick={() => void removeKey(prov.id, prov.name)} className="border border-site-import-card rounded-[.75rem] px-3 text-[12px] text-site-import-muted-foreground cursor-pointer hover:text-site-import-foreground" aria-label={`Remove ${prov.name} key`}>Remove</button>}
-            </div>
-            {!user && <p className="text-site-import-muted-foreground text-[11px] mt-1 mb-0">Sign in to save your own keys.</p>}
-          </div>
-        ))}
-        {keyMsg && <p role="status" className="text-site-import-foreground text-[12px] mt-3 mb-0">{keyMsg}</p>}
+        <ProviderKeysSettings />
       </div>
       <h2 className={label}>Browser tab</h2>
       <div className={`${card} p-5 mb-8`}>

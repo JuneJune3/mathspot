@@ -3,6 +3,7 @@ import { useServerFn } from '@tanstack/react-start';
 import { openSite } from '@/lib/hyperbrowser.functions';
 import { checkFrame } from '@/lib/frame-check.functions';
 import { KEYS, read } from '@/lib/stealth';
+import { usePrefs } from '@/lib/prefs';
 import { PROXY_SERVER } from './ProxyHub';
 import { Search, Globe, RefreshCw, ExternalLink, Shield } from 'lucide-react';
 
@@ -16,6 +17,7 @@ export default function ProxySearch({ defaultUrl = 'https://www.crazygames.com' 
   const [isLoading, setIsLoading] = useState(false);
   const [cloudError, setCloudError] = useState('');
   const [tier, setTier] = useState<'Direct' | 'Proxy' | 'Cloud'>('Direct');
+  const prefs = usePrefs();
   const open = useServerFn(openSite);
   const check = useServerFn(checkFrame);
 
@@ -51,7 +53,7 @@ export default function ProxySearch({ defaultUrl = 'https://www.crazygames.com' 
       if (viaProxy.frameable) { setTier('Proxy'); setActiveUrl(proxied); return; }
     }
     try {
-      const live = await open({ data: { query: target } });
+      const live = await open({ data: { query: target, provider: prefs.provider } });
       setTier('Cloud'); setActiveUrl(live.liveUrl);
     } catch (err) {
       setCloudError(/unauthorized|authorization/i.test(String((err as Error)?.message)) ? 'This site blocks direct loading. Sign in to use the cloud browser.' : 'Every route failed. Try opening the site in a new tab.');
